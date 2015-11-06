@@ -26,6 +26,7 @@
 		<log4j.version>1.2.15</log4j.version>
 		<es.version>1.5.2</es.version>
 		<jest.version>0.1.6</jest.version>
+		<parse4j.version>1.4</parse4j.version>
 	</properties>
 
 	<dependencyManagement>
@@ -160,6 +161,11 @@
 				<groupId>io.searchbox</groupId>
 				<artifactId>jest</artifactId>
 				<version>${jest.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.github.thiagolocatelli</groupId>
+				<artifactId>parse4j</artifactId>
+				<version>${parse4j.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
