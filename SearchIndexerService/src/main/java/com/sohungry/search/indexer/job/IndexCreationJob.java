@@ -16,10 +16,11 @@ import io.searchbox.client.JestClient;
 import io.searchbox.indices.CreateIndex;
 import io.searchbox.indices.IndicesExists;
 import io.searchbox.indices.mapping.PutMapping;
+import io.searchbox.indices.type.TypeExist;
 
 /**
  * On service startup, check if necessary indices are existing. If not, create
- * indices with predefined settings
+ * indices with predefined settings (src/main/resources/settings/index_settings.json)
  * 
  * @author shiyan
  */
@@ -28,22 +29,22 @@ public class IndexCreationJob {
 
 	@PostConstruct
 	public void createIndex() throws IOException {
-//		InputStream s2 = this.getClass().getResourceAsStream("/settings/index_settings.json");
-//		String theString = IOUtils.toString(s2, Charset.defaultCharset()); 
-//		System.out.println(theString);
+		JestClient client = ElasticsearchRestClientFactory.getRestClient();
 		if (!indexExist(Indices.FOOD)) {
-			JestClient client = ElasticsearchRestClientFactory.getRestClient();
+			
 			String settings = readFile("/settings/index_settings.json");
 			try {
 				client.execute(new CreateIndex.Builder(Indices.FOOD)
 						.settings(ImmutableSettings.builder()
 								.loadFromSource(settings).build().getAsMap())
 						.build());
-				putRestaurantMappings(client);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+		}
+		if (isTypeExist("restaurant")) {
+			putRestaurantMappings(client);
 		}
 	}
 	
@@ -60,10 +61,19 @@ public class IndexCreationJob {
 			boolean indexExists = client.execute(new IndicesExists.Builder(indexName).build()).isSucceeded();
 			return indexExists;
 		} catch (IOException e) {
-			return true; // status unknown, return true to prevent unexpected
-							// index creation
+			return true; // status unknown, return true to prevent unexpected index creation
 		}
 
+	}
+	
+	private boolean isTypeExist(String typeName) {
+		JestClient client = ElasticsearchRestClientFactory.getRestClient();
+		try {
+			boolean indexExists = client.execute(new TypeExist.Builder(typeName).build()).isSucceeded();
+			return indexExists;
+		} catch (IOException e) {
+			return true; // status unknown, return true to prevent unexpected type creation
+		}
 	}
 	
 	private String readFile(String filePath) {

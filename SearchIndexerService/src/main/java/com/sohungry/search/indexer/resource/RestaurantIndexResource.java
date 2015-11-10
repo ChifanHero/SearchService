@@ -14,8 +14,7 @@ public class RestaurantIndexResource {
 	
 	@RequestMapping(value = "/single", method = RequestMethod.POST, produces = {"application/json"})
     public void greeting(@RequestBody RestaurantResource restaurant) {
-		int i = 0;
-		int j = 1;
+
         
     }
 
