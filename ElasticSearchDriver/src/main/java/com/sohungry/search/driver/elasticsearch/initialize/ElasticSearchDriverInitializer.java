@@ -11,10 +11,12 @@ import com.sohungry.search.driver.elasticsearch.factory.ElasticsearchRestClientF
  * @author shiyan
  */
 @Component
-public class Initializer {
+public class ElasticSearchDriverInitializer {
 	
 	@PostConstruct
 	public void initialize() {
+		System.out.print("driver initialized");
 		ElasticsearchRestClientFactory.initializeElasticsearchClient();
 	}
+
 }

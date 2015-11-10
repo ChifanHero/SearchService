@@ -27,6 +27,9 @@
 		<es.version>1.5.2</es.version>
 		<jest.version>0.1.6</jest.version>
 		<parse4j.version>1.4</parse4j.version>
+		<httpClient.version>4.5</httpClient.version>
+		<commons.io.version>2.4</commons.io.version>
+		<httpcore.version>4.4.1</httpcore.version>
 	</properties>
 
 	<dependencyManagement>
@@ -148,6 +151,11 @@
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
+				<groupId>com.sohungry.search.driver.elasticsearch</groupId>
+				<artifactId>ElasticSearchDriver</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
 				<groupId>org.codehaus.jackson</groupId>
 				<artifactId>jackson-mapper-asl</artifactId>
 				<version>${jackson.mapper.asl.version}</version>
@@ -167,6 +175,22 @@
 				<artifactId>parse4j</artifactId>
 				<version>${parse4j.version}</version>
 			</dependency>
+			<dependency>
+				<groupId>org.apache.httpcomponents</groupId>
+				<artifactId>httpclient</artifactId>
+				<version>${httpClient.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.httpcomponents</groupId>
+				<artifactId>httpcore</artifactId>
+				<version>${httpcore.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.directory.studio</groupId>
+				<artifactId>org.apache.commons.io</artifactId>
+				<version>${commons.io.version}</version>
+			</dependency>
+
 		</dependencies>
 	</dependencyManagement>
 	<profiles>
@@ -178,7 +202,6 @@
 			<modules>
 				<module>SearchEntity</module>
 				<module>SearchIndexerService</module>
-				<module>SearchService</module>
 				<module>SearchService</module>
 				<module>ElasticSearchDriver</module>
 			</modules>

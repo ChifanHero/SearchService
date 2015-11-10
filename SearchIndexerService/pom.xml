@@ -117,6 +117,25 @@
 		<dependency>
 			<groupId>com.github.thiagolocatelli</groupId>
 			<artifactId>parse4j</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.sohungry</groupId>
+			<artifactId>SearchEntity</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.sohungry.search.driver.elasticsearch</groupId>
+			<artifactId>ElasticSearchDriver</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.directory.studio</groupId>
+			<artifactId>org.apache.commons.io</artifactId>
 			</dependency>
 	</dependencies>
+	<build>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+			</resource>
+		</resources>
+	</build>
 </project>

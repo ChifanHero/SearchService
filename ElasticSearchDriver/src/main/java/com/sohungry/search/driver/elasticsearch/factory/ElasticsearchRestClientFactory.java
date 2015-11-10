@@ -16,10 +16,13 @@ public class ElasticsearchRestClientFactory {
 	private static JestClientFactory factory;
 
 	public static JestClient getRestClient() {
+		if (factory == null) {
+			initializeElasticsearchClient();
+		}
 		return factory.getObject();
 	}
 
-	public static void initializeElasticsearchClient() {
+	public synchronized static void initializeElasticsearchClient() {
 		if (factory == null) {
 			factory = new JestClientFactory();
 			factory.setHttpClientConfig(new HttpClientConfig.Builder(Config.AWS_ENDPOINT).multiThreaded(true).build());

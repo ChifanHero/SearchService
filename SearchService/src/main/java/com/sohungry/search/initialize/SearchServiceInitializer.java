@@ -5,7 +5,7 @@ import javax.annotation.PostConstruct;
 import org.springframework.stereotype.Component;
 
 @Component
-public class Initializer {
+public class SearchServiceInitializer {
 	
 	@PostConstruct
 	public void init() {
