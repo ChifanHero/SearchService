@@ -8,9 +8,9 @@
 		<artifactId>SearchServiceAggregator</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
-	<groupId>com.sohungry.search.search</groupId>
-	<artifactId>SearchService</artifactId>
-	<name>SearchService</name>
+	<groupId>com.sohungry.search.index</groupId>
+	<artifactId>SearchIndexService</artifactId>
+	<name>SearchIndexService</name>
 	<url>http://maven.apache.org</url>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -24,6 +24,10 @@
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<scope>test</scope>
-		</dependency><!--$NO-MVN-MAN-VER$ -->
+		</dependency>
+		<dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+			</dependency>
 	</dependencies>
 </project>
