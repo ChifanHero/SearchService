@@ -25,16 +25,18 @@ public class RestaurantIndexResource {
 		if (jestResult != null) {
 			response.setSuccess(jestResult.isSucceeded());
 			response.setErrorMessage(jestResult.getErrorMessage());
-			response.setResult(jestResult.getJsonObject());
 		}
         return response;
     }
 	
 	@RequestMapping(value = "/bulk", method = RequestMethod.POST, produces = {"application/json"})
-    public void index(@RequestBody List<RestaurantSource> restaurants) {
-
-        int i = 0;
-        int j = 1;
+    public Response index(@RequestBody List<RestaurantSource> sources) {
+		Response response = new Response();
+		JestResult jestResult = new IndexerDelegate().indexRestaurants(sources);
+		if (jestResult != null) {
+			response.setSuccess(jestResult.isSucceeded());
+			response.setErrorMessage(jestResult.getErrorMessage());
+		}
+        return response;
     }
-
 }
