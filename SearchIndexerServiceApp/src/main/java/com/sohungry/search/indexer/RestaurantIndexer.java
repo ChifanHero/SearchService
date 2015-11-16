@@ -1,4 +1,4 @@
-package com.sohungry.search.indexer.delegate;
+package com.sohungry.search.indexer;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -29,7 +29,7 @@ import io.searchbox.client.JestResult;
 import io.searchbox.core.Bulk;
 import io.searchbox.core.Index;
 
-public class IndexerDelegate {
+public class RestaurantIndexer {
 		
 	public JestResult indexRestaurant(RestaurantSource source) {
 		if (source == null) return null;

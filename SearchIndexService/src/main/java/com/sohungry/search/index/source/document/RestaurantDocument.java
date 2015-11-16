@@ -7,7 +7,6 @@ import org.codehaus.jackson.annotate.JsonProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class RestaurantDocument {
-	
 	private String objectId;
 	private String name;
 	

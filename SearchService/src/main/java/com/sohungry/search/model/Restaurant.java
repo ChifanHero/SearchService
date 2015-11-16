@@ -14,16 +14,19 @@ public class Restaurant {
 	@JsonProperty("english_name")
 	private String englishName;
 	private String address;
-	private String distance;
+	private Distance distance;
 	
 	@JsonProperty("favorite_count")
-	private String favoriteCount;
+	private long favoriteCount;
 	
 	@JsonProperty("like_count")
-	private String likeCount;
+	private long likeCount;
 	
 	@JsonProperty("neutral_count")
-	private String neutralCount;
+	private long neutralCount;
+	
+	@JsonProperty("dislike_count")
+	private long dislikeCount;
 	private String phone;
 	private String hours;
 	private Picture picture;
@@ -52,29 +55,35 @@ public class Restaurant {
 	public void setAddress(String address) {
 		this.address = address;
 	}
-	public String getDistance() {
+	public Distance getDistance() {
 		return distance;
 	}
-	public void setDistance(String distance) {
+	public void setDistance(Distance distance) {
 		this.distance = distance;
 	}
-	public String getFavoriteCount() {
+	public long getFavoriteCount() {
 		return favoriteCount;
 	}
-	public void setFavoriteCount(String favoriteCount) {
+	public void setFavoriteCount(long favoriteCount) {
 		this.favoriteCount = favoriteCount;
 	}
-	public String getLikeCount() {
+	public long getLikeCount() {
 		return likeCount;
 	}
-	public void setLikeCount(String likeCount) {
+	public void setLikeCount(long likeCount) {
 		this.likeCount = likeCount;
 	}
-	public String getNeutralCount() {
+	public long getNeutralCount() {
 		return neutralCount;
 	}
-	public void setNeutralCount(String neutralCount) {
+	public void setNeutralCount(long neutralCount) {
 		this.neutralCount = neutralCount;
+	}
+	public long getDislikeCount() {
+		return dislikeCount;
+	}
+	public void setDislikeCount(long dislikeCount) {
+		this.dislikeCount = dislikeCount;
 	}
 	public String getPhone() {
 		return phone;

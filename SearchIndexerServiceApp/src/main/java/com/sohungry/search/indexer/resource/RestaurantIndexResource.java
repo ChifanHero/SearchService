@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.sohungry.search.index.response.Response;
 import com.sohungry.search.index.source.RestaurantSource;
-import com.sohungry.search.indexer.delegate.IndexerDelegate;
+import com.sohungry.search.indexer.RestaurantIndexer;
 
 import io.searchbox.client.JestResult;
 
@@ -21,7 +21,7 @@ public class RestaurantIndexResource {
 	@RequestMapping(value = "/single", method = RequestMethod.POST, produces = {"application/json"})
     public Response index(@RequestBody RestaurantSource source) {
 		Response response = new Response();
-		JestResult jestResult = new IndexerDelegate().indexRestaurant(source);
+		JestResult jestResult = new RestaurantIndexer().indexRestaurant(source);
 		if (jestResult != null) {
 			response.setSuccess(jestResult.isSucceeded());
 			response.setErrorMessage(jestResult.getErrorMessage());
@@ -32,7 +32,7 @@ public class RestaurantIndexResource {
 	@RequestMapping(value = "/bulk", method = RequestMethod.POST, produces = {"application/json"})
     public Response index(@RequestBody List<RestaurantSource> sources) {
 		Response response = new Response();
-		JestResult jestResult = new IndexerDelegate().indexRestaurants(sources);
+		JestResult jestResult = new RestaurantIndexer().indexRestaurants(sources);
 		if (jestResult != null) {
 			response.setSuccess(jestResult.isSucceeded());
 			response.setErrorMessage(jestResult.getErrorMessage());

@@ -8,10 +8,13 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 public class RestaurantSearchRequest {
 	
 	private String keyword;
-	private int offset;
-	private int limit;
+	private Integer offset;
+	private Integer limit;
 	private SortBy sortBy;
 	private SortOrder sortOrder;
+	private TuningParams parameters;
+	private Output output;
+	private Location userLocation;
 	
 	public String getKeyword() {
 		return keyword;
@@ -19,16 +22,16 @@ public class RestaurantSearchRequest {
 	public void setKeyword(String keyword) {
 		this.keyword = keyword;
 	}
-	public int getOffset() {
+	public Integer getOffset() {
 		return offset;
 	}
-	public void setOffset(int offset) {
+	public void setOffset(Integer offset) {
 		this.offset = offset;
 	}
-	public int getLimit() {
+	public Integer getLimit() {
 		return limit;
 	}
-	public void setLimit(int limit) {
+	public void setLimit(Integer limit) {
 		this.limit = limit;
 	}
 	public SortBy getSortBy() {
@@ -42,6 +45,24 @@ public class RestaurantSearchRequest {
 	}
 	public void setSortOrder(SortOrder sortOrder) {
 		this.sortOrder = sortOrder;
+	}
+	public TuningParams getParameters() {
+		return parameters;
+	}
+	public void setParameters(TuningParams parameters) {
+		this.parameters = parameters;
+	}
+	public Output getOutput() {
+		return output;
+	}
+	public void setOutput(Output output) {
+		this.output = output;
+	}
+	public Location getUserLocation() {
+		return userLocation;
+	}
+	public void setUserLocation(Location userLocation) {
+		this.userLocation = userLocation;
 	}
 
 }

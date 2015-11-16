@@ -1,22 +1,13 @@
 package com.sohungry.search.model;
 
-import java.util.List;
-
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
-public class RestaurantSearchResponse {
+public enum DistanceUnit {
 	
-	private List<Restaurant> results;
-
-	public List<Restaurant> getResults() {
-		return results;
-	}
-
-	public void setResults(List<Restaurant> results) {
-		this.results = results;
-	}
+	mi,
+	km
 
 }
