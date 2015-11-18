@@ -43,11 +43,20 @@ public class IndexCreationJob {
 				e.printStackTrace();
 			}
 		}
-		if (isTypeExist("restaurant")) {
+		if (!isTypeExist(Indices.FOOD, Types.RESTAURANT)) {
 			putRestaurantMappings(client);
+		}
+		if (!isTypeExist(Indices.FOOD, Types.DISH)) {
+			putDishMappings(client);
 		}
 	}
 	
+	private void putDishMappings(JestClient client) throws IOException {
+		String mappings = readFile("/mappings/dish_mappings.json");
+		PutMapping putMapping = new PutMapping.Builder(Indices.FOOD, Types.DISH, mappings).build();
+		client.execute(putMapping);
+	}
+
 	private void putRestaurantMappings(JestClient client) throws IOException {
 		String mappings = readFile("/mappings/restaurant_mappings.json");
 		PutMapping putMapping = new PutMapping.Builder(Indices.FOOD, Types.RESTAURANT, mappings).build();
@@ -66,10 +75,10 @@ public class IndexCreationJob {
 
 	}
 	
-	private boolean isTypeExist(String typeName) {
+	private boolean isTypeExist(String indexName, String typeName) {
 		JestClient client = ElasticsearchRestClientFactory.getRestClient();
 		try {
-			boolean indexExists = client.execute(new TypeExist.Builder(typeName).build()).isSucceeded();
+			boolean indexExists = client.execute(new TypeExist.Builder(indexName).addType(typeName).build()).isSucceeded();
 			return indexExists;
 		} catch (IOException e) {
 			return true; // status unknown, return true to prevent unexpected type creation
