@@ -29,6 +29,7 @@ import com.sohungry.search.parse.config.ParseClass;
 import com.sohungry.search.parse.util.ParseValidator;
 
 import io.searchbox.client.JestResult;
+import io.searchbox.core.Bulk;
 import io.searchbox.core.Index;
 
 public class DishIndexer {
@@ -127,7 +128,6 @@ public class DishIndexer {
 				e.printStackTrace();
 			}
 			query = ParseQuery.getQuery(ParseClass.LIST_MEMBER);
-			query.include("list");
 			ParseQuery<?> innerQuery = ParseQuery.getQuery(ParseClass.DISH);
 			innerQuery.whereContainedIn("objectId", dishToDoc.keySet());
 			query.whereMatchesQuery("dish", innerQuery);
@@ -155,6 +155,12 @@ public class DishIndexer {
 		for (ParseObject listMember : listMembers) {
 			ParseObject dish = listMember.getParseObject("dish");
 			ParseObject list = listMember.getParseObject("list");
+			try {
+				list.fetchIfNeeded();
+			} catch (ParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			if (dish == null || list == null) {
 				continue;
 			} else {
@@ -225,7 +231,52 @@ public class DishIndexer {
 	}
 
 	public JestResult indexDishes(List<DishSource> sources) {
-		// TODO Auto-generated method stub
+		if (sources == null || sources.size() == 0) {
+			return null;
+		} else {
+			List<DishDocument> documents = convertSourcesToDocuments(sources);
+			if (documents == null || documents.size() == 0) {
+				return null;
+			} else {
+				return bulkIndexDishDocument(documents);
+			}
+		}
+	}
+
+	private JestResult bulkIndexDishDocument(List<DishDocument> documents) {
+		if (documents == null || documents.size() <= 0) {
+			return null;
+		} 
+		ObjectMapper mapper = new ObjectMapper();
+		List<Index> actions = new ArrayList<Index>();
+		for (DishDocument document : documents) {
+			String doc = null;
+			try {
+				doc = mapper.writeValueAsString(document);
+			} catch (JsonGenerationException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (JsonMappingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			if (doc != null) {
+				Index index = new Index.Builder(doc).build();
+				actions.add(index);
+			}
+		}
+		if (actions.size() > 0) {
+			Bulk bulk = new Bulk.Builder().defaultIndex(Indices.FOOD).defaultType(Types.DISH).addAction(actions).build();
+			try {
+				return ElasticsearchRestClientFactory.getRestClient().execute(bulk);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		} 
 		return null;
 	}
 
