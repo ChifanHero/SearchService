@@ -49,8 +49,17 @@ public class IndexCreationJob {
 		if (!isTypeExist(Indices.FOOD, Types.DISH)) {
 			putDishMappings(client);
 		}
+		if (!isTypeExist(Indices.FOOD, Types.LIST)) {
+			putListMappings(client);
+		}
 	}
 	
+	private void putListMappings(JestClient client) throws IOException {
+		String mappings = readFile("/mappings/list_mappings.json");
+		PutMapping putMapping = new PutMapping.Builder(Indices.FOOD, Types.LIST, mappings).build();
+		client.execute(putMapping);
+	}
+
 	private void putDishMappings(JestClient client) throws IOException {
 		String mappings = readFile("/mappings/dish_mappings.json");
 		PutMapping putMapping = new PutMapping.Builder(Indices.FOOD, Types.DISH, mappings).build();
