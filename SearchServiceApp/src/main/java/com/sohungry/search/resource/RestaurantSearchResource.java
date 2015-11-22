@@ -24,10 +24,6 @@ public class RestaurantSearchResource {
 	@RequestMapping(value = "/restaurant", method = RequestMethod.POST, produces = {"application/json"})
     public RestaurantSearchResponse index(@RequestBody RestaurantSearchRequest searchRequest, HttpServletRequest request, HttpServletResponse response) throws IOException {
         
-		if (searchRequest.getKeyword() == null && searchRequest.getOffset() == null) {
-			response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Search request must have keyword or limit");
-			return null;
-		}
 		List<Restaurant> searchResults = new RestaurantFinder.Builder(searchRequest).build().find();
 		RestaurantSearchResponse searchResponse = new RestaurantSearchResponse();
 		searchResponse.setResults(searchResults);

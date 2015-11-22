@@ -6,6 +6,8 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import org.elasticsearch.index.query.BaseQueryBuilder;
+import org.elasticsearch.index.query.DisMaxQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
@@ -172,37 +174,38 @@ public class RestaurantFinder {
 			}
 			JsonObject source = hit.get("_source").getAsJsonObject();
 			Restaurant restaurant = new Restaurant();
-			if (source.get("address") != null) {
+			if (source.get("address") != null && !source.get("address").isJsonNull()) {
 				restaurant.setAddress(source.get("address").getAsString());
 			}
-			if (source.get("dislike_count") != null) {
+			if (source.get("dislike_count") != null && !source.get("dislike_count").isJsonNull()) {
 				restaurant.setDislikeCount(source.get("dislike_count").getAsLong());
 			}
-			if (source.get("coordinates") != null) {
+			if (source.get("coordinates") != null && !source.get("coordinates").isJsonNull()) {
 				restaurant.setDistance(getDistance(source.get("coordinates").getAsJsonObject()));
 			}
-			if (source.get("english_name") != null) {
+			if (source.get("english_name") != null && !source.get("english_name").isJsonNull()) {
 				restaurant.setEnglishName(source.get("english_name").getAsString());
 			}
-			if (source.get("favorite_count") != null) {
+			if (source.get("favorite_count") != null && !source.get("favorite_count").isJsonNull()) {
 				restaurant.setFavoriteCount(source.get("favorite_count").getAsLong());
 			}
-			if (source.get("objectId") != null) {
+			if (source.get("objectId") != null && !source.get("objectId").isJsonNull()) {
 				restaurant.setId(source.get("objectId").getAsString());
 			}
-			if (source.get("like_count") != null) {
+			if (source.get("like_count") != null && !source.get("like_count").isJsonNull()) {
 				restaurant.setLikeCount(source.get("like_count").getAsLong());
 			}
-			if (source.get("name") != null) {
+			if (source.get("name") != null && !source.get("name").isJsonNull()) {
 				restaurant.setName(source.get("name").getAsString());
 			}
-			if (source.get("neutral_count") != null) {
+			if (source.get("neutral_count") != null && !source.get("neutral_count").isJsonNull()) {
 				restaurant.setNeutralCount(source.get("neutral_count").getAsLong());
 			}
-			if (source.get("phone") != null) {
+			if (source.get("phone") != null && !source.get("phone").isJsonNull()) {
 				restaurant.setPhone(source.get("phone").getAsString());
+				
 			}
-			if (source.get("picture") != null) {
+			if (source.get("picture") != null && !source.get("picture").isJsonNull()) {
 				JsonObject pic = source.get("picture").getAsJsonObject();
 				if (pic != null) {
 					Picture picture = new Picture();
@@ -248,10 +251,20 @@ public class RestaurantFinder {
 
 	private Search buildSearchQuery() {
 		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-		QueryBuilder nameQuery = QueryBuilders.matchQuery("name", keyword);
-		QueryBuilder englishNameQuery = QueryBuilders.matchQuery("english_name", keyword);
-		QueryBuilder dishNameQuery = QueryBuilders.matchQuery("dishes", keyword);
-		QueryBuilder query = QueryBuilders.disMaxQuery().add(nameQuery).add(dishNameQuery).add(englishNameQuery);
+		BaseQueryBuilder query;
+		if (keyword != null && !keyword.isEmpty()) {
+			query = QueryBuilders.disMaxQuery();
+			QueryBuilder nameQuery = QueryBuilders.matchQuery("name", keyword);
+			QueryBuilder englishNameQuery = QueryBuilders.matchQuery("english_name", keyword);
+			QueryBuilder dishNameQuery = QueryBuilders.matchQuery("dishes", keyword);
+			((DisMaxQueryBuilder) query).add(nameQuery);
+			((DisMaxQueryBuilder) query).add(englishNameQuery);
+			((DisMaxQueryBuilder) query).add(dishNameQuery);
+		} else {
+			query = QueryBuilders.matchAllQuery();
+		}
+		
+
 		SortBuilder sort = null;
 		if (sortBy == SortBy.distance && userLocation != null) {
 			sort = SortBuilders.geoDistanceSort("coordinates").point(userLocation.getLat(), userLocation.getLon());
