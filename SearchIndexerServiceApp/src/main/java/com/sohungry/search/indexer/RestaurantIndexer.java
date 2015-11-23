@@ -19,9 +19,9 @@ import com.sohungry.search.elastic.factory.ElasticsearchRestClientFactory;
 import com.sohungry.search.index.Indices;
 import com.sohungry.search.index.Types;
 import com.sohungry.search.index.source.RestaurantSource;
-import com.sohungry.search.index.source.document.GeoPoint;
-import com.sohungry.search.index.source.document.Picture;
 import com.sohungry.search.index.source.document.RestaurantDocument;
+import com.sohungry.search.index.source.document.shared.GeoPoint;
+import com.sohungry.search.index.source.document.shared.Picture;
 import com.sohungry.search.parse.config.ParseClass;
 import com.sohungry.search.parse.util.ParseValidator;
 

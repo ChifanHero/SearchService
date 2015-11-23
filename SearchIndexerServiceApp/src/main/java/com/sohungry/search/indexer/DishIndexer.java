@@ -20,9 +20,9 @@ import com.sohungry.search.index.Indices;
 import com.sohungry.search.index.Types;
 import com.sohungry.search.index.source.DishSource;
 import com.sohungry.search.index.source.document.DishDocument;
-import com.sohungry.search.index.source.document.DishList;
-import com.sohungry.search.index.source.document.GeoPoint;
-import com.sohungry.search.index.source.document.Picture;
+import com.sohungry.search.index.source.document.shared.GeoPoint;
+import com.sohungry.search.index.source.document.shared.Picture;
+import com.sohungry.search.index.source.document.simplified.SimplifiedDishList;
 import com.sohungry.search.index.source.document.simplified.SimplifiedMenu;
 import com.sohungry.search.index.source.document.simplified.SimplifiedRestaurant;
 import com.sohungry.search.parse.config.ParseClass;
@@ -165,12 +165,12 @@ public class DishIndexer {
 				continue;
 			} else {
 				DishDocument document = dishToDoc.get(dish.getObjectId());
-				List<DishList> lists = document.getLists();
+				List<SimplifiedDishList> lists = document.getLists();
 				if (lists == null) {
-					lists = new ArrayList<DishList>();
+					lists = new ArrayList<SimplifiedDishList>();
 					document.setLists(lists);
 				}
-				DishList dishList = new DishList();
+				SimplifiedDishList dishList = new SimplifiedDishList();
 				dishList.setObjectId(list.getObjectId());
 				dishList.setName(list.getString("name"));
 				lists.add(dishList);

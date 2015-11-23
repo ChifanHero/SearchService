@@ -5,6 +5,8 @@ import java.util.List;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
 
+import com.sohungry.search.index.source.document.shared.Picture;
+import com.sohungry.search.index.source.document.simplified.SimplifiedDishList;
 import com.sohungry.search.index.source.document.simplified.SimplifiedMenu;
 import com.sohungry.search.index.source.document.simplified.SimplifiedRestaurant;
 
@@ -36,7 +38,7 @@ public class DishDocument {
 	
 	private SimplifiedRestaurant fromRestaurant;
 	private SimplifiedMenu menu;
-	private List<DishList> lists;
+	private List<SimplifiedDishList> lists;
 	
 	public String getObjectId() {
 		return objectId;
@@ -110,10 +112,10 @@ public class DishDocument {
 	public void setMenu(SimplifiedMenu menu) {
 		this.menu = menu;
 	}
-	public List<DishList> getLists() {
+	public List<SimplifiedDishList> getLists() {
 		return lists;
 	}
-	public void setLists(List<DishList> lists) {
+	public void setLists(List<SimplifiedDishList> lists) {
 		this.lists = lists;
 	}
 	

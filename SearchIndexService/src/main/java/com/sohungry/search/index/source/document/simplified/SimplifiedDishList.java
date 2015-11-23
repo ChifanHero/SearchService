@@ -1,9 +1,9 @@
-package com.sohungry.search.index.source.document;
+package com.sohungry.search.index.source.document.simplified;
 
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class DishList {
+public class SimplifiedDishList {
 	
 	private String objectId;
 	private String name;

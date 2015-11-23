@@ -44,6 +44,12 @@
          },
          "dishes":{  
             "type":"string"
+         },
+         "restaurants":{
+         	"type":"string"
+         },
+         "locations":{
+         	"type" : "geo_point"
          }
       }
    }

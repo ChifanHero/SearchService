@@ -3,7 +3,7 @@ package com.sohungry.search.index.source.document.simplified;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
 
-import com.sohungry.search.index.source.document.GeoPoint;
+import com.sohungry.search.index.source.document.shared.GeoPoint;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SimplifiedRestaurant {

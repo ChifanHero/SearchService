@@ -5,6 +5,9 @@ import java.util.List;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
 
+import com.sohungry.search.index.source.document.shared.GeoPoint;
+import com.sohungry.search.index.source.document.shared.Picture;
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class RestaurantDocument {
 	private String objectId;

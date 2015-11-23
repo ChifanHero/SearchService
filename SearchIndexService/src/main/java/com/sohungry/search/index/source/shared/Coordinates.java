@@ -1,4 +1,4 @@
-package com.sohungry.search.index.source;
+package com.sohungry.search.index.source.shared;
 
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;

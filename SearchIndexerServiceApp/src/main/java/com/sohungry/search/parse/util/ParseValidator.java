@@ -2,7 +2,7 @@ package com.sohungry.search.parse.util;
 
 import org.parse4j.ParseObject;
 
-import com.sohungry.search.index.source.Pointer;
+import com.sohungry.search.index.source.shared.Pointer;
 
 public class ParseValidator {
 	
