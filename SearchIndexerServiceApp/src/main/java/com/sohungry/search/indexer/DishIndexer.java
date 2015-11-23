@@ -72,8 +72,8 @@ public class DishIndexer {
 		} else {
 			List<DishDocument> documents = new ArrayList<DishDocument>();
 			Map<String, DishDocument> imagesToFetch = new HashMap<String, DishDocument>();
-			Map<String, DishDocument> restaurantsToFetch = new HashMap<String, DishDocument>();
-			Map<String, DishDocument> menusToFetch = new HashMap<String, DishDocument>();
+			Map<String, List<DishDocument>> restaurantsToFetch = new HashMap<String, List<DishDocument>>();
+			Map<String, List<DishDocument>> menusToFetch = new HashMap<String, List<DishDocument>>();
 
 			Map<String, DishDocument> dishToDoc = new HashMap<String, DishDocument>();
 			
@@ -91,10 +91,20 @@ public class DishIndexer {
 					imagesToFetch.put(source.getPicture().getObjectId(), document);
 				}
 				if (ParseValidator.isValidPointer(source.getFromRestaurant())) {
-					restaurantsToFetch.put(source.getFromRestaurant().getObjectId(), document);
+					List<DishDocument> dishDocuments = restaurantsToFetch.get(source.getFromRestaurant().getObjectId());
+					if (dishDocuments == null) {
+						dishDocuments = new ArrayList<DishDocument>();
+					}
+					dishDocuments.add(document);
+					restaurantsToFetch.put(source.getFromRestaurant().getObjectId(), dishDocuments);
 				}
 				if (ParseValidator.isValidPointer(source.getMenu())) {
-					menusToFetch.put(source.getMenu().getObjectId(), document);
+					List<DishDocument> dishDocuments = menusToFetch.get(source.getMenu().getObjectId());
+					if (dishDocuments == null) {
+						dishDocuments = new ArrayList<DishDocument>();
+					}
+					dishDocuments.add(document);
+					menusToFetch.put(source.getMenu().getObjectId(), dishDocuments);
 
 				}
 				dishToDoc.put(source.getObjectId(), document);
@@ -179,7 +189,7 @@ public class DishIndexer {
 		
 	}
 
-	private void assembleMenus(List<ParseObject> menus, Map<String, DishDocument> menusToFetch) {
+	private void assembleMenus(List<ParseObject> menus, Map<String, List<DishDocument>> menusToFetch) {
 		if (menus == null || menus.isEmpty() || menusToFetch == null || menusToFetch.isEmpty()) {
 			return;
 		}
@@ -188,12 +198,16 @@ public class DishIndexer {
 			menuItem.setName(menu.getString("name"));
 			menuItem.setEnglishName(menu.getString("english_name"));
 			menuItem.setObjectId(menu.getObjectId());
-			DishDocument document = menusToFetch.get(menu.getObjectId());
-			document.setMenu(menuItem);
+			List<DishDocument> documents = menusToFetch.get(menu.getObjectId());
+			if (documents != null && documents.size() >= 0) {
+				for (DishDocument document : documents) {
+					document.setMenu(menuItem);
+				}
+			}
 		}
 	}
 
-	private void assembleRestaurants(List<ParseObject> restaurants, Map<String, DishDocument> restaurantsToFetch) {
+	private void assembleRestaurants(List<ParseObject> restaurants, Map<String, List<DishDocument>> restaurantsToFetch) {
 		if (restaurants == null || restaurants.isEmpty() || restaurantsToFetch == null || restaurantsToFetch.isEmpty()) {
 			return;
 		}
@@ -208,8 +222,13 @@ public class DishIndexer {
 				coordinates.setLon(restaurant.getParseGeoPoint("coordinates").getLongitude());
 				rest.setCoordinates(coordinates);
 			}
-			DishDocument document = restaurantsToFetch.get(restaurant.getObjectId());
-			document.setFromRestaurant(rest);
+			List<DishDocument> documents = restaurantsToFetch.get(restaurant.getObjectId());
+			if (documents != null && documents.size() >= 0) {
+				for (DishDocument document : documents) {
+					document.setFromRestaurant(rest);
+				}
+			}
+			
 		}
 	}
 

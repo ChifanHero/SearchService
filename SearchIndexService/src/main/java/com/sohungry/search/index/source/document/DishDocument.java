@@ -36,6 +36,7 @@ public class DishDocument {
 	private String createdAt;
 	private String updatedAt;
 	
+	@JsonProperty("from_restaurant")
 	private SimplifiedRestaurant fromRestaurant;
 	private SimplifiedMenu menu;
 	private List<SimplifiedDishList> lists;

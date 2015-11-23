@@ -73,6 +73,21 @@
                }
             }
          },
+         "menu" : {
+         	"type" : "nested",
+         	"properties":{
+         		"objectId":{  
+                  "type":"string",
+                  "index":"not_analyzed"
+               },
+               "name":{  
+                  "type":"string"
+               },
+               "english_name":{  
+                  "type":"string"
+               }
+         	}
+         },
          "lists":{  
             "type":"nested",
             "properties":{  
