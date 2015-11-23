@@ -24,6 +24,7 @@ import com.sohungry.search.index.source.document.shared.GeoPoint;
 import com.sohungry.search.parse.config.ParseClass;
 
 import io.searchbox.client.JestResult;
+import io.searchbox.core.Bulk;
 import io.searchbox.core.Index;
 
 public class DishListIndexer {
@@ -75,6 +76,14 @@ public class DishListIndexer {
 				document.setUpdatedAt(source.getUpdatedAt());
 				document.setLikeCount(source.getLikeCount());
 				listToDoc.put(source.getObjectId(), document);
+				if (source.getStartingLocation() != null) {
+					List<GeoPoint> locations = new ArrayList<GeoPoint>();
+					GeoPoint location = new GeoPoint();
+					location.setLat(source.getStartingLocation().getLatitude());
+					location.setLon(source.getStartingLocation().getLongitude());
+					locations.add(location);
+					document.setLocations(locations);
+				}
 				documents.add(document);
 			}
 			ParseQuery<ParseObject> query = ParseQuery.getQuery(ParseClass.LIST_MEMBER);
@@ -106,19 +115,17 @@ public class DishListIndexer {
 			ParseObject dish = listMember.getParseObject("dish");
 			ParseObject list = listMember.getParseObject("list");
 			ParseObject fromRestaurant = null;
-			try {
-				dish.fetchIfNeeded();
-				fromRestaurant = dish.getParseObject("from_restaurant");
-				fromRestaurant.fetchIfNeeded();
-			} catch (ParseException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			ParseObject completeDish = fetchCompleteParseObject(dish);
+			if (completeDish != null) {
+				if (completeDish.getParseObject("from_restaurant") != null) {
+					fromRestaurant = fetchCompleteParseObject(completeDish.getParseObject("from_restaurant"));
+				}
 			}
 			if (dish == null || list == null) {
 				continue;
 			} else {
 				DishListDocument document = listToDoc.get(list.getObjectId());
-				fillDishNames(dish, document);
+				fillDishNames(completeDish, document);
 				if (fromRestaurant != null) {
 					fillRestaurantNames(fromRestaurant, document);
 					fillLocations(fromRestaurant, document);
@@ -126,6 +133,19 @@ public class DishListIndexer {
 				
 			}
 		}
+	}
+
+	private ParseObject fetchCompleteParseObject(ParseObject parseObject) {
+		if (parseObject == null || parseObject.getObjectId() == null || parseObject.getClassName() == null) return null;
+		String objectId = parseObject.getObjectId();
+		ParseQuery<ParseObject> query = ParseQuery.getQuery(parseObject.getClassName());
+		try {
+			return query.get(objectId);
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
 	}
 
 	private void fillLocations(ParseObject fromRestaurant, DishListDocument document) {
@@ -182,7 +202,39 @@ public class DishListIndexer {
 	}
 
 	private JestResult bulkIndexDishListDocument(List<DishListDocument> documents) {
-		// TODO Auto-generated method stub
+		if (documents == null || documents.size() <= 0) {
+			return null;
+		} 
+		ObjectMapper mapper = new ObjectMapper();
+		List<Index> actions = new ArrayList<Index>();
+		for (DishListDocument document : documents) {
+			String doc = null;
+			try {
+				doc = mapper.writeValueAsString(document);
+			} catch (JsonGenerationException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (JsonMappingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			if (doc != null) {
+				Index index = new Index.Builder(doc).build();
+				actions.add(index);
+			}
+		}
+		if (actions.size() > 0) {
+			Bulk bulk = new Bulk.Builder().defaultIndex(Indices.FOOD).defaultType(Types.LIST).addAction(actions).build();
+			try {
+				return ElasticsearchRestClientFactory.getRestClient().execute(bulk);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		} 
 		return null;
 	}
 

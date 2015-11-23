@@ -4,6 +4,8 @@ import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
+import com.sohungry.search.index.source.shared.Coordinates;
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
 public class DishListSource {
@@ -22,6 +24,9 @@ public class DishListSource {
 	private String name;
 	private String objectId;
 	private String updatedAt;
+	
+	@JsonProperty("starting_location")
+	private Coordinates startingLocation;
 	
 	public String getCreatedAt() {
 		return createdAt;
@@ -64,5 +69,11 @@ public class DishListSource {
 	}
 	public void setUpdatedAt(String updatedAt) {
 		this.updatedAt = updatedAt;
+	}
+	public Coordinates getStartingLocation() {
+		return startingLocation;
+	}
+	public void setStartingLocation(Coordinates startingLocation) {
+		this.startingLocation = startingLocation;
 	}
 }
