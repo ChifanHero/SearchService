@@ -10,6 +10,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 public class RestaurantSearchResponse {
 	
 	private List<Restaurant> results;
+	private Error error;
 
 	public List<Restaurant> getResults() {
 		return results;
@@ -17,6 +18,14 @@ public class RestaurantSearchResponse {
 
 	public void setResults(List<Restaurant> results) {
 		this.results = results;
+	}
+
+	public Error getError() {
+		return error;
+	}
+
+	public void setError(Error error) {
+		this.error = error;
 	}
 
 }
