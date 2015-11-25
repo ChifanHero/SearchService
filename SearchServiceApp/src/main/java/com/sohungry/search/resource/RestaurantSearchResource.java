@@ -22,7 +22,7 @@ public class RestaurantSearchResource {
 	
 	
 	@RequestMapping(value = "/restaurant", method = RequestMethod.POST, produces = {"application/json"})
-    public RestaurantSearchResponse index(@RequestBody RestaurantSearchRequest searchRequest, HttpServletRequest request, HttpServletResponse response) throws IOException {
+    public RestaurantSearchResponse search(@RequestBody RestaurantSearchRequest searchRequest, HttpServletRequest request, HttpServletResponse response) throws IOException {
         
 		List<Restaurant> searchResults = new RestaurantFinder.Builder(searchRequest).build().find();
 		RestaurantSearchResponse searchResponse = new RestaurantSearchResponse();

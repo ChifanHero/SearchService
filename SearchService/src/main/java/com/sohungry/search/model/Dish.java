@@ -1,5 +1,7 @@
 package com.sohungry.search.model;
 
+import java.util.List;
+
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
@@ -30,8 +32,8 @@ public class Dish {
 	@JsonProperty("from_restaurant")
 	private Restaurant fromRestaurant;
 	
-	@JsonProperty("related_list")
-	private DishList relatedList;
+	@JsonProperty("related_lists")
+	private List<DishList> relatedLists;
 	
 	public String getId() {
 		return id;
@@ -87,11 +89,11 @@ public class Dish {
 	public void setFromRestaurant(Restaurant fromRestaurant) {
 		this.fromRestaurant = fromRestaurant;
 	}
-	public DishList getRelatedList() {
-		return relatedList;
+	public List<DishList> getRelatedLists() {
+		return relatedLists;
 	}
-	public void setRelatedList(DishList relatedList) {
-		this.relatedList = relatedList;
+	public void setRelatedLists(List<DishList> relatedLists) {
+		this.relatedLists = relatedLists;
 	}
 
 }

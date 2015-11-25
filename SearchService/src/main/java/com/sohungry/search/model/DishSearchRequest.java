@@ -17,6 +17,7 @@ public class DishSearchRequest {
 	private Location userLocation;
 	private String restaurantId;
 	private String menuId;
+	private Range range;
 	
 	public String getKeyword() {
 		return keyword;
@@ -77,5 +78,11 @@ public class DishSearchRequest {
 	}
 	public void setMenuId(String menuId) {
 		this.menuId = menuId;
+	}
+	public Range getRange() {
+		return range;
+	}
+	public void setRange(Range range) {
+		this.range = range;
 	}
 }

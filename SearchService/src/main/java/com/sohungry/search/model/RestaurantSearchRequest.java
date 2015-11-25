@@ -15,6 +15,7 @@ public class RestaurantSearchRequest {
 	private TuningParams parameters;
 	private Output output;
 	private Location userLocation;
+	private Range range;
 	
 	public String getKeyword() {
 		return keyword;
@@ -63,6 +64,12 @@ public class RestaurantSearchRequest {
 	}
 	public void setUserLocation(Location userLocation) {
 		this.userLocation = userLocation;
+	}
+	public Range getRange() {
+		return range;
+	}
+	public void setRange(Range range) {
+		this.range = range;
 	}
 
 }

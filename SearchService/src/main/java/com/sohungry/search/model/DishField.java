@@ -5,24 +5,21 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
-public enum RestaurantField {
+public enum DishField {
 	
 	id,
 	name,
-	english_name,
-	address,
-	distance,
 	favorite_count,
 	like_count,
 	dislike_count,
 	neutral_count,
-	phone,
-	hours,
-	picture;
+	picture,
+	from_restaurant,
+	related_lists;
 	
-	public static RestaurantField fromString(String text) {
+	public static DishField fromString(String text) {
 		if (text != null) {
-			for (RestaurantField b : RestaurantField.values()) {
+			for (DishField b : DishField.values()) {
 				if (text.equalsIgnoreCase(b.name())) {
 					return b;
 				}

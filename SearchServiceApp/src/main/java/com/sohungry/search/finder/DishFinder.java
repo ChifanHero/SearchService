@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.elasticsearch.index.query.BaseQueryBuilder;
+import org.elasticsearch.index.query.BoolFilterBuilder;
 import org.elasticsearch.index.query.DisMaxQueryBuilder;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.FilterBuilders;
@@ -24,6 +25,9 @@ import com.sohungry.search.distance.HaversineDistanceCalculator;
 import com.sohungry.search.elastic.factory.ElasticsearchRestClientFactory;
 import com.sohungry.search.index.Indices;
 import com.sohungry.search.index.Types;
+import com.sohungry.search.model.Dish;
+import com.sohungry.search.model.DishList;
+import com.sohungry.search.model.DishSearchRequest;
 import com.sohungry.search.model.Distance;
 import com.sohungry.search.model.DistanceUnit;
 import com.sohungry.search.model.Location;
@@ -31,14 +35,13 @@ import com.sohungry.search.model.Picture;
 import com.sohungry.search.model.Range;
 import com.sohungry.search.model.Restaurant;
 import com.sohungry.search.model.RestaurantField;
-import com.sohungry.search.model.RestaurantSearchRequest;
 import com.sohungry.search.model.SortBy;
 import com.sohungry.search.model.SortOrder;
 
 import io.searchbox.core.Search;
 import io.searchbox.core.SearchResult;
 
-public class RestaurantFinder {
+public class DishFinder {
 	
 	private String keyword;
 	private Integer offset;
@@ -50,12 +53,11 @@ public class RestaurantFinder {
 	private List<String> fields;
 	private Location userLocation;
 	private DistanceUnit distanceUnit;
+	private String restaurantId;
+	private String menuId;
 	private Range range;
 	
-	/**
-	 * Use new RestaurantFinder.Builder(searchRequest).build() to construct this class
-	 */
-	private RestaurantFinder(Builder builder) {
+	private DishFinder (Builder builder) {
 		this.keyword = builder.keyword;
 		this.offset = builder.offset;
 		this.limit = builder.limit;
@@ -66,11 +68,13 @@ public class RestaurantFinder {
 		this.fields = builder.fields;
 		this.userLocation = builder.userLocation;
 		this.distanceUnit = builder.distanceUnit;
+		this.restaurantId = builder.restaurantId;
+		this.menuId = builder.menuId;
 		this.range = builder.range;
 	}
-	
+
 	public static class Builder {
-		
+
 		private static final int DEFAULT_OFFSET = 0;
 		private static final int DEFAULT_LIMIT = 20;
 		private static final SortBy DEFAULT_SORTBY = SortBy.hotness;
@@ -88,9 +92,11 @@ public class RestaurantFinder {
 		private List<String> fields = new ArrayList<String>();
 		private Location userLocation;
 		private DistanceUnit distanceUnit = DEFAULT_DISTANCE_UNIT;
+		private String restaurantId;
+		private String menuId;
 		private Range range;
-		
-		public Builder(RestaurantSearchRequest searchRequest) {
+
+		public Builder(DishSearchRequest searchRequest) {
 			if (searchRequest == null) {
 				throw new RuntimeException("searchRequest cannot be null");
 			}
@@ -118,15 +124,14 @@ public class RestaurantFinder {
 			this.userLocation = searchRequest.getUserLocation();
 			if (searchRequest.getOutput() != null && searchRequest.getOutput().getParams() != null && searchRequest.getOutput().getParams().getDistanceUnit() != null) {
 				this.distanceUnit = searchRequest.getOutput().getParams().getDistanceUnit();
-			}
+			} 
+			this.restaurantId = searchRequest.getRestaurantId();
+			this.menuId = searchRequest.getMenuId();
 			this.range = searchRequest.getRange();
+			
 		}
-		
-		public RestaurantFinder build() {
-			return new RestaurantFinder(this);
-		}
-		
-		private void cleanFields(List<String> fields) {
+
+		private void cleanFields(List<String> fields2) {
 			if (fields == null || fields.size() <= 0) return;
 			Iterator<String> iterator = fields.iterator();
 			while (iterator.hasNext()) {
@@ -136,17 +141,21 @@ public class RestaurantFinder {
 				}
 			}
 		}
-		
+
+		public DishFinder build() {
+			return new DishFinder(this);
+		}
+
 	}
 
-	public List<Restaurant> find() {
+	public List<Dish> find() {
 		Search searchQuery = buildSearchQuery();
 		try {
 			SearchResult result = ElasticsearchRestClientFactory.getRestClient().execute(searchQuery);
 			if (result != null && result.getJsonObject() != null && result.getJsonObject().getAsJsonObject("hits") != null) {
 				JsonArray hits = result.getJsonObject().getAsJsonObject("hits").getAsJsonArray("hits");
 				if (hits != null && hits.size() > 0) {
-					List<Restaurant> results = convert(hits);
+					List<Dish> results = convert(hits);
 					return results;
 				}
 			}	
@@ -156,13 +165,13 @@ public class RestaurantFinder {
 		}
 		return Collections.emptyList();
 	}
-	
-	private List<Restaurant> convert(JsonArray hits) {
+
+	private List<Dish> convert(JsonArray hits) {
 		if (hits == null || !hits.isJsonArray() || hits.size() <= 0) return Collections.emptyList();
-		List<Restaurant> results = new ArrayList<Restaurant>();
+		List<Dish> results = new ArrayList<Dish>();
 		for (int i = 0; i < hits.size(); i++) {
 			JsonObject hit = hits.get(i).getAsJsonObject();
-			if (hit == null || !hit.isJsonObject() || isMetadata(hit)) {
+			if (hit == null || !hit.isJsonObject()) {
 				continue;
 			}
 			
@@ -170,37 +179,27 @@ public class RestaurantFinder {
 				continue;
 			}
 			JsonObject source = hit.get("_source").getAsJsonObject();
-			Restaurant restaurant = new Restaurant();
-			if (source.get("address") != null && !source.get("address").isJsonNull()) {
-				restaurant.setAddress(source.get("address").getAsString());
-			}
+			Dish dish = new Dish();
 			if (source.get("dislike_count") != null && !source.get("dislike_count").isJsonNull()) {
-				restaurant.setDislikeCount(source.get("dislike_count").getAsLong());
-			}
-			if (source.get("coordinates") != null && !source.get("coordinates").isJsonNull()) {
-				restaurant.setDistance(getDistance(source.get("coordinates").getAsJsonObject()));
+				dish.setDislikeCount(source.get("dislike_count").getAsLong());
 			}
 			if (source.get("english_name") != null && !source.get("english_name").isJsonNull()) {
-				restaurant.setEnglishName(source.get("english_name").getAsString());
+				dish.setEnglishName(source.get("english_name").getAsString());
 			}
 			if (source.get("favorite_count") != null && !source.get("favorite_count").isJsonNull()) {
-				restaurant.setFavoriteCount(source.get("favorite_count").getAsLong());
+				dish.setFavoriteCount(source.get("favorite_count").getAsLong());
 			}
 			if (source.get("objectId") != null && !source.get("objectId").isJsonNull()) {
-				restaurant.setId(source.get("objectId").getAsString());
+				dish.setId(source.get("objectId").getAsString());
 			}
 			if (source.get("like_count") != null && !source.get("like_count").isJsonNull()) {
-				restaurant.setLikeCount(source.get("like_count").getAsLong());
+				dish.setLikeCount(source.get("like_count").getAsLong());
 			}
 			if (source.get("name") != null && !source.get("name").isJsonNull()) {
-				restaurant.setName(source.get("name").getAsString());
+				dish.setName(source.get("name").getAsString());
 			}
 			if (source.get("neutral_count") != null && !source.get("neutral_count").isJsonNull()) {
-				restaurant.setNeutralCount(source.get("neutral_count").getAsLong());
-			}
-			if (source.get("phone") != null && !source.get("phone").isJsonNull()) {
-				restaurant.setPhone(source.get("phone").getAsString());
-				
+				dish.setNeutralCount(source.get("neutral_count").getAsLong());
 			}
 			if (source.get("picture") != null && !source.get("picture").isJsonNull()) {
 				JsonObject pic = source.get("picture").getAsJsonObject();
@@ -208,16 +207,142 @@ public class RestaurantFinder {
 					Picture picture = new Picture();
 					picture.setOriginal(pic.get("original").getAsString());
 					picture.setThumbnail(pic.get("thumbnail").getAsString());
-					restaurant.setPicture(picture);
+					dish.setPicture(picture);
 				}
-			}			
-			results.add(restaurant);
+			}
+			if (source.get("from_restaurant") != null && !source.get("from_restaurant").isJsonNull()) {
+				JsonObject restaurant = source.get("from_restaurant").getAsJsonObject();
+				if (restaurant != null) {
+					Restaurant fromRestaurant = new Restaurant();
+					if (restaurant.get("name") != null && !restaurant.get("name").isJsonNull()) {
+						fromRestaurant.setName(restaurant.get("name").getAsString());
+					}
+					if (restaurant.get("english_name") != null && !restaurant.get("english_name").isJsonNull()) {
+						fromRestaurant.setEnglishName(restaurant.get("english_name").getAsString());
+					}
+					if (restaurant.get("coordinates") != null && !restaurant.get("coordinates").isJsonNull()) {
+						fromRestaurant.setDistance(getDistance(restaurant.get("coordinates").getAsJsonObject()));
+					}
+					dish.setFromRestaurant(fromRestaurant);
+				}
+			}
+			if (source.get("lists") != null && !source.get("lists").isJsonNull()) {
+				JsonArray lists = source.get("lists").getAsJsonArray();
+				if (lists.size() > 0) {
+					List<DishList> dishLists = new ArrayList<DishList>();
+					for (int j = 0; i < lists.size(); i++) {
+						DishList dishList = new DishList();
+						JsonObject list = lists.get(j).getAsJsonObject();
+						if (list.get("objectId") != null && !list.get("objectId").isJsonNull()) {
+							dishList.setId(list.get("objectId").getAsString());
+						}
+						if (list.get("name") != null && !list.get("name").isJsonNull()) {
+							dishList.setName(list.get("name").getAsString());
+						}
+						dishLists.add(dishList);
+					}
+					dish.setRelatedLists(dishLists);
+				}
+			}
+			results.add(dish);
 		}
 		return results;
 	}
 
-	private boolean isMetadata(JsonObject hit) {
-		return (hit.get("_id") == null || "_explain".equals(hit.get("_id").getAsString()));
+	private Search buildSearchQuery() {
+		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+		BaseQueryBuilder mainQuery;
+		if (keyword != null && !keyword.isEmpty()) {
+			mainQuery = QueryBuilders.disMaxQuery();
+			QueryBuilder nameQuery = QueryBuilders.matchQuery("name", keyword);
+			QueryBuilder englishNameQuery = QueryBuilders.matchQuery("english_name", keyword);
+			QueryBuilder fromRestaurantNameQuery = QueryBuilders.matchQuery("from_restaurant.name", keyword);
+			QueryBuilder fromRestaurantEngNameQuery = QueryBuilders.matchQuery("from_restaurant.english_name", keyword);
+			QueryBuilder listQuery = QueryBuilders.matchQuery("lists.name", keyword);
+			((DisMaxQueryBuilder) mainQuery).add(nameQuery);
+			((DisMaxQueryBuilder) mainQuery).add(englishNameQuery);
+			((DisMaxQueryBuilder) mainQuery).add(fromRestaurantNameQuery);
+			((DisMaxQueryBuilder) mainQuery).add(fromRestaurantEngNameQuery);
+			((DisMaxQueryBuilder) mainQuery).add(listQuery);
+		} else {
+			mainQuery = QueryBuilders.matchAllQuery();
+		}
+		
+		
+		
+		SortBuilder sort = null;
+		if (sortBy == SortBy.distance && userLocation != null) {
+			sort = SortBuilders.geoDistanceSort("coordinates").point(userLocation.getLat(), userLocation.getLon());
+			if (sortOrder == SortOrder.decrease) {
+				sort.order(org.elasticsearch.search.sort.SortOrder.DESC);
+			} else {
+				sort.order(org.elasticsearch.search.sort.SortOrder.ASC);
+			}
+		} else {
+			sort = SortBuilders.fieldSort("like_count");
+			if (sortOrder == SortOrder.decrease) {
+				sort.order(org.elasticsearch.search.sort.SortOrder.DESC);
+			} else {
+				sort.order(org.elasticsearch.search.sort.SortOrder.ASC);
+			}
+		}
+		
+		FilterBuilder restaurantFilter = createRestaurantFilter();
+		FilterBuilder menuFilter = createMenuFilter();
+		FilterBuilder distanceFilter = createRangeFilter();
+		if (restaurantFilter != null || menuFilter != null || distanceFilter != null) {
+			BoolFilterBuilder boolFilter = FilterBuilders.boolFilter();
+			if (restaurantFilter != null) {
+				boolFilter.must(restaurantFilter);
+			}
+			if (menuFilter != null) {
+				boolFilter.must(menuFilter);
+			}
+			if (distanceFilter != null) {
+				boolFilter.must(distanceFilter);
+			}
+			FilteredQueryBuilder filteredQuery = QueryBuilders.filteredQuery(mainQuery, boolFilter);
+			searchSourceBuilder.query(filteredQuery).sort(sort).from(offset).size(limit).minScore(relevanceScoreThreshold);
+		} else {
+			searchSourceBuilder.query(mainQuery).sort(sort).from(offset).size(limit).minScore(relevanceScoreThreshold);
+		}
+		if (!returnAllFields) {
+			searchSourceBuilder.fields(fields);
+		}
+		Search search = new Search.Builder(searchSourceBuilder.toString())
+		                                // multiple index or types can be added.
+		                                .addIndex(Indices.FOOD)
+		                                .addType(Types.DISH)
+		                                .build();
+		return search;
+	}
+
+	private FilterBuilder createRangeFilter() {
+		if (this.range != null && this.range.getDistance() != null && this.range.getCenter() != null) {
+			org.elasticsearch.common.unit.DistanceUnit unit = org.elasticsearch.common.unit.DistanceUnit.MILES;
+			if (this.range.getDistance() != null && this.range.getDistance().getUnit() != null && this.range.getDistance().getUnit() == DistanceUnit.km) {
+				unit = org.elasticsearch.common.unit.DistanceUnit.KILOMETERS;
+			} 
+			FilterBuilder geoDistanceFilter = FilterBuilders.geoDistanceFilter("from_restaurant.coordinates").distance(range.getDistance().getValue(), unit);
+			return geoDistanceFilter;
+		}
+		return null;
+	}
+
+	private FilterBuilder createMenuFilter() {
+		if (this.menuId != null) {
+			FilterBuilder menuFilter = FilterBuilders.termFilter("menu.objectId", this.menuId);
+			return menuFilter;
+		}
+		return null;
+	}
+
+	private FilterBuilder createRestaurantFilter() {
+		if (this.restaurantId != null) {
+			FilterBuilder restaurantFilter = FilterBuilders.termFilter("from_restaurant.objectId", this.restaurantId);
+			return restaurantFilter;
+		}
+		return null;
 	}
 	
 	private Distance getDistance(JsonObject coordinates) {
@@ -246,63 +371,4 @@ public class RestaurantFinder {
 		return null;
 	}
 
-	private Search buildSearchQuery() {
-		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-		BaseQueryBuilder query;
-		if (keyword != null && !keyword.isEmpty()) {
-			query = QueryBuilders.disMaxQuery();
-			QueryBuilder nameQuery = QueryBuilders.matchQuery("name", keyword);
-			QueryBuilder englishNameQuery = QueryBuilders.matchQuery("english_name", keyword);
-			QueryBuilder dishNameQuery = QueryBuilders.matchQuery("dishes", keyword);
-			((DisMaxQueryBuilder) query).add(nameQuery);
-			((DisMaxQueryBuilder) query).add(englishNameQuery);
-			((DisMaxQueryBuilder) query).add(dishNameQuery);
-		} else {
-			query = QueryBuilders.matchAllQuery();
-		}
-		
-
-		SortBuilder sort = null;
-		if (sortBy == SortBy.distance && userLocation != null) {
-			sort = SortBuilders.geoDistanceSort("coordinates").point(userLocation.getLat(), userLocation.getLon());
-			if (sortOrder == SortOrder.decrease) {
-				sort.order(org.elasticsearch.search.sort.SortOrder.DESC);
-			} else {
-				sort.order(org.elasticsearch.search.sort.SortOrder.ASC);
-			}
-		} else {
-			sort = SortBuilders.fieldSort("like_count");
-			if (sortOrder == SortOrder.decrease) {
-				sort.order(org.elasticsearch.search.sort.SortOrder.DESC);
-			} else {
-				sort.order(org.elasticsearch.search.sort.SortOrder.ASC);
-			}
-		}
-		
-		if (this.range != null && this.range.getCenter() != null && this.range.getDistance() != null) {
-			org.elasticsearch.common.unit.DistanceUnit unit = org.elasticsearch.common.unit.DistanceUnit.MILES;
-			if (this.range.getDistance() != null && this.range.getDistance().getUnit() != null && this.range.getDistance().getUnit() == DistanceUnit.km) {
-				unit = org.elasticsearch.common.unit.DistanceUnit.KILOMETERS;
-			} 
-			FilterBuilder geoDistanceFilter = FilterBuilders.geoDistanceFilter("coordinates").distance(range.getDistance().getValue(), unit);
-			FilteredQueryBuilder filterreQuery = QueryBuilders.filteredQuery(query, geoDistanceFilter);
-			searchSourceBuilder.query(filterreQuery).sort(sort).from(offset).size(limit).minScore(relevanceScoreThreshold);
-		} else {
-			searchSourceBuilder.query(query).sort(sort).from(offset).size(limit).minScore(relevanceScoreThreshold);
-		}
-		
-		if (!returnAllFields) {
-			searchSourceBuilder.fields(fields);
-		}
-		Search search = new Search.Builder(searchSourceBuilder.toString())
-		                                // multiple index or types can be added.
-		                                .addIndex(Indices.FOOD)
-		                                .addType(Types.RESTAURANT)
-		                                .build();
-		return search;
-	}
-	
-	
-
 }
-
