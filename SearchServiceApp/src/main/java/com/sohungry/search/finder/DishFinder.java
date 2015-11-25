@@ -256,14 +256,12 @@ public class DishFinder {
 			mainQuery = QueryBuilders.disMaxQuery();
 			QueryBuilder nameQuery = QueryBuilders.matchQuery("name", keyword);
 			QueryBuilder englishNameQuery = QueryBuilders.matchQuery("english_name", keyword);
-			QueryBuilder fromRestaurantNameQuery = QueryBuilders.matchQuery("from_restaurant.name", keyword);
-			QueryBuilder fromRestaurantEngNameQuery = QueryBuilders.matchQuery("from_restaurant.english_name", keyword);
-			QueryBuilder listQuery = QueryBuilders.matchQuery("lists.name", keyword);
+			QueryBuilder nestedRestaurantQuery = createNestedRestaurantQuery();
+			QueryBuilder nestedDishListQuery = createNestedDishListQuery();
 			((DisMaxQueryBuilder) mainQuery).add(nameQuery);
 			((DisMaxQueryBuilder) mainQuery).add(englishNameQuery);
-			((DisMaxQueryBuilder) mainQuery).add(fromRestaurantNameQuery);
-			((DisMaxQueryBuilder) mainQuery).add(fromRestaurantEngNameQuery);
-			((DisMaxQueryBuilder) mainQuery).add(listQuery);
+			((DisMaxQueryBuilder) mainQuery).add(nestedRestaurantQuery);
+			((DisMaxQueryBuilder) mainQuery).add(nestedDishListQuery);
 		} else {
 			mainQuery = QueryBuilders.matchAllQuery();
 		}
@@ -317,6 +315,21 @@ public class DishFinder {
 		return search;
 	}
 
+	private QueryBuilder createNestedRestaurantQuery() {
+		DisMaxQueryBuilder query = QueryBuilders.disMaxQuery();
+		QueryBuilder nameQuery = QueryBuilders.matchQuery("from_restaurant.name", keyword);
+		QueryBuilder englishQuery = QueryBuilders.matchQuery("from_restaurant.english_name", keyword);
+		query.add(nameQuery).add(englishQuery);
+		QueryBuilder nestedRestaurantQuery = QueryBuilders.nestedQuery("from_restaurant", query);
+		return nestedRestaurantQuery;
+	}
+
+	private QueryBuilder createNestedDishListQuery() {
+		QueryBuilder query = QueryBuilders.matchQuery("lists.name", keyword);
+		QueryBuilder nestedListsQuery = QueryBuilders.nestedQuery("lists", query);
+		return nestedListsQuery;
+	}
+
 	private FilterBuilder createRangeFilter() {
 		if (this.range != null && this.range.getDistance() != null && this.range.getCenter() != null) {
 			org.elasticsearch.common.unit.DistanceUnit unit = org.elasticsearch.common.unit.DistanceUnit.MILES;
@@ -324,7 +337,8 @@ public class DishFinder {
 				unit = org.elasticsearch.common.unit.DistanceUnit.KILOMETERS;
 			} 
 			FilterBuilder geoDistanceFilter = FilterBuilders.geoDistanceFilter("from_restaurant.coordinates").distance(range.getDistance().getValue(), unit);
-			return geoDistanceFilter;
+			FilterBuilder nestedRestFilter = FilterBuilders.nestedFilter("from_restaurant", geoDistanceFilter);
+			return nestedRestFilter;
 		}
 		return null;
 	}
@@ -332,7 +346,8 @@ public class DishFinder {
 	private FilterBuilder createMenuFilter() {
 		if (this.menuId != null) {
 			FilterBuilder menuFilter = FilterBuilders.termFilter("menu.objectId", this.menuId);
-			return menuFilter;
+			FilterBuilder nestedMenuFilter = FilterBuilders.nestedFilter("menu", menuFilter);
+			return nestedMenuFilter;
 		}
 		return null;
 	}
@@ -340,7 +355,8 @@ public class DishFinder {
 	private FilterBuilder createRestaurantFilter() {
 		if (this.restaurantId != null) {
 			FilterBuilder restaurantFilter = FilterBuilders.termFilter("from_restaurant.objectId", this.restaurantId);
-			return restaurantFilter;
+			FilterBuilder nestedRestFilter = FilterBuilders.nestedFilter("from_restaurant", restaurantFilter);
+			return nestedRestFilter;
 		}
 		return null;
 	}

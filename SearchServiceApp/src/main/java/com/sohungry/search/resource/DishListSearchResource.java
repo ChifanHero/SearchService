@@ -20,7 +20,7 @@ import com.sohungry.search.model.DishListSearchResponse;
 @RequestMapping(value = "/search")
 public class DishListSearchResource {
 	
-	@RequestMapping(value = "/dish", method = RequestMethod.POST, produces = {"application/json"})
+	@RequestMapping(value = "/list", method = RequestMethod.POST, produces = {"application/json"})
     public DishListSearchResponse search(@RequestBody DishListSearchRequest searchRequest, HttpServletRequest request, HttpServletResponse response) throws IOException {
         
 		List<DishList> searchResults = new DishListFinder.Builder(searchRequest).build().find();
