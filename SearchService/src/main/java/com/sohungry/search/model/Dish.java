@@ -17,16 +17,16 @@ public class Dish {
 	private String englishName;
 	
 	@JsonProperty("farovite_count")
-	private long favoriteCount;
+	private Long favoriteCount;
 	
 	@JsonProperty("like_count")
-	private long likeCount;
+	private Long likeCount;
 	
 	@JsonProperty("dislike_count")
-	private long dislikeCount;
+	private Long dislikeCount;
 	
 	@JsonProperty("neutral_count")
-	private long neutralCount;
+	private Long neutralCount;
 	private Picture picture;
 	
 	@JsonProperty("from_restaurant")
@@ -53,28 +53,28 @@ public class Dish {
 	public void setEnglishName(String englishName) {
 		this.englishName = englishName;
 	}
-	public long getFavoriteCount() {
+	public Long getFavoriteCount() {
 		return favoriteCount;
 	}
-	public void setFavoriteCount(long favoriteCount) {
+	public void setFavoriteCount(Long favoriteCount) {
 		this.favoriteCount = favoriteCount;
 	}
-	public long getLikeCount() {
+	public Long getLikeCount() {
 		return likeCount;
 	}
-	public void setLikeCount(long likeCount) {
+	public void setLikeCount(Long likeCount) {
 		this.likeCount = likeCount;
 	}
-	public long getDislikeCount() {
+	public Long getDislikeCount() {
 		return dislikeCount;
 	}
-	public void setDislikeCount(long dislikeCount) {
+	public void setDislikeCount(Long dislikeCount) {
 		this.dislikeCount = dislikeCount;
 	}
-	public long getNeutralCount() {
+	public Long getNeutralCount() {
 		return neutralCount;
 	}
-	public void setNeutralCount(long neutralCount) {
+	public void setNeutralCount(Long neutralCount) {
 		this.neutralCount = neutralCount;
 	}
 	public Picture getPicture() {

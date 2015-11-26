@@ -12,7 +12,7 @@ public class DishList {
 	private String name;
 	
 	@JsonProperty("member_count")
-	private long memberCount;
+	private Long memberCount;
 
 	public String getId() {
 		return id;
@@ -30,11 +30,11 @@ public class DishList {
 		this.name = name;
 	}
 
-	public long getMemberCount() {
+	public Long getMemberCount() {
 		return memberCount;
 	}
 
-	public void setMemberCount(long memberCount) {
+	public void setMemberCount(Long memberCount) {
 		this.memberCount = memberCount;
 	}
 

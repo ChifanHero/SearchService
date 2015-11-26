@@ -19,15 +19,12 @@ import org.elasticsearch.search.sort.SortBuilders;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.sohungry.search.distance.Coordinates;
-import com.sohungry.search.distance.HaversineDistanceCalculator;
+import com.sohungry.search.converter.RestaurantConverter;
 import com.sohungry.search.elastic.factory.ElasticsearchRestClientFactory;
 import com.sohungry.search.index.Indices;
 import com.sohungry.search.index.Types;
-import com.sohungry.search.model.Distance;
 import com.sohungry.search.model.DistanceUnit;
 import com.sohungry.search.model.Location;
-import com.sohungry.search.model.Picture;
 import com.sohungry.search.model.Range;
 import com.sohungry.search.model.Restaurant;
 import com.sohungry.search.model.RestaurantField;
@@ -38,7 +35,7 @@ import com.sohungry.search.model.SortOrder;
 import io.searchbox.core.Search;
 import io.searchbox.core.SearchResult;
 
-public class RestaurantFinder {
+public class RestaurantFinder extends AbstractFinder<Restaurant> {
 	
 	private String keyword;
 	private Integer offset;
@@ -110,11 +107,11 @@ public class RestaurantFinder {
 			if (searchRequest.getParameters() != null && searchRequest.getParameters().getRelevanceScoreThreshold() != null) {
 				this.relevanceScoreThreshold = searchRequest.getParameters().getRelevanceScoreThreshold();
 			}
-			if (searchRequest.getOutput() != null && searchRequest.getOutput().getFields() == null) {
+			if (searchRequest.getOutput() != null && searchRequest.getOutput().getFields() != null) {
 				this.returnAllFields = false;
 				this.fields = searchRequest.getOutput().getFields();
-				cleanFields(fields);
 			} 
+			normalizeFields(fields);
 			this.userLocation = searchRequest.getUserLocation();
 			if (searchRequest.getOutput() != null && searchRequest.getOutput().getParams() != null && searchRequest.getOutput().getParams().getDistanceUnit() != null) {
 				this.distanceUnit = searchRequest.getOutput().getParams().getDistanceUnit();
@@ -126,19 +123,28 @@ public class RestaurantFinder {
 			return new RestaurantFinder(this);
 		}
 		
-		private void cleanFields(List<String> fields) {
-			if (fields == null || fields.size() <= 0) return;
-			Iterator<String> iterator = fields.iterator();
-			while (iterator.hasNext()) {
-				String field = iterator.next();
-				if (RestaurantField.fromString(field) == null) {
-					iterator.remove();
+		private void normalizeFields(List<String> fields) {
+			if (returnAllFields) {
+				fields.clear();
+				for (RestaurantField field : RestaurantField.values()) {
+					fields.add(field.name());
+				}
+			} else {
+				if (fields == null || fields.size() <= 0) return;
+				Iterator<String> iterator = fields.iterator();
+				while (iterator.hasNext()) {
+					String field = iterator.next();
+					if (RestaurantField.fromString(field) == null) {
+						iterator.remove();
+					}
 				}
 			}
+			
 		}
 		
 	}
 
+	@Override
 	public List<Restaurant> find() {
 		Search searchQuery = buildSearchQuery();
 		try {
@@ -157,12 +163,13 @@ public class RestaurantFinder {
 		return Collections.emptyList();
 	}
 	
-	private List<Restaurant> convert(JsonArray hits) {
+	@Override
+	protected List<Restaurant> convert(JsonArray hits) {
 		if (hits == null || !hits.isJsonArray() || hits.size() <= 0) return Collections.emptyList();
 		List<Restaurant> results = new ArrayList<Restaurant>();
 		for (int i = 0; i < hits.size(); i++) {
 			JsonObject hit = hits.get(i).getAsJsonObject();
-			if (hit == null || !hit.isJsonObject() || isMetadata(hit)) {
+			if (hit == null || !hit.isJsonObject()) {
 				continue;
 			}
 			
@@ -170,83 +177,17 @@ public class RestaurantFinder {
 				continue;
 			}
 			JsonObject source = hit.get("_source").getAsJsonObject();
-			Restaurant restaurant = new Restaurant();
-			if (source.get("address") != null && !source.get("address").isJsonNull()) {
-				restaurant.setAddress(source.get("address").getAsString());
-			}
-			if (source.get("dislike_count") != null && !source.get("dislike_count").isJsonNull()) {
-				restaurant.setDislikeCount(source.get("dislike_count").getAsLong());
-			}
-			if (source.get("coordinates") != null && !source.get("coordinates").isJsonNull()) {
-				restaurant.setDistance(getDistance(source.get("coordinates").getAsJsonObject()));
-			}
-			if (source.get("english_name") != null && !source.get("english_name").isJsonNull()) {
-				restaurant.setEnglishName(source.get("english_name").getAsString());
-			}
-			if (source.get("favorite_count") != null && !source.get("favorite_count").isJsonNull()) {
-				restaurant.setFavoriteCount(source.get("favorite_count").getAsLong());
-			}
-			if (source.get("objectId") != null && !source.get("objectId").isJsonNull()) {
-				restaurant.setId(source.get("objectId").getAsString());
-			}
-			if (source.get("like_count") != null && !source.get("like_count").isJsonNull()) {
-				restaurant.setLikeCount(source.get("like_count").getAsLong());
-			}
-			if (source.get("name") != null && !source.get("name").isJsonNull()) {
-				restaurant.setName(source.get("name").getAsString());
-			}
-			if (source.get("neutral_count") != null && !source.get("neutral_count").isJsonNull()) {
-				restaurant.setNeutralCount(source.get("neutral_count").getAsLong());
-			}
-			if (source.get("phone") != null && !source.get("phone").isJsonNull()) {
-				restaurant.setPhone(source.get("phone").getAsString());
-				
-			}
-			if (source.get("picture") != null && !source.get("picture").isJsonNull()) {
-				JsonObject pic = source.get("picture").getAsJsonObject();
-				if (pic != null) {
-					Picture picture = new Picture();
-					picture.setOriginal(pic.get("original").getAsString());
-					picture.setThumbnail(pic.get("thumbnail").getAsString());
-					restaurant.setPicture(picture);
-				}
-			}			
+			Restaurant restaurant = new RestaurantConverter(this.fields, this.userLocation, this.distanceUnit).convert(source);	
 			results.add(restaurant);
 		}
 		return results;
 	}
 
-	private boolean isMetadata(JsonObject hit) {
-		return (hit.get("_id") == null || "_explain".equals(hit.get("_id").getAsString()));
-	}
 	
-	private Distance getDistance(JsonObject coordinates) {
-		if (coordinates == null || !coordinates.isJsonObject() || coordinates.get("lat") == null || coordinates.get("lon") == null) 
-			return null;
-		if ((returnAllFields || fields.contains(RestaurantField.distance)) && userLocation != null) {
-			Coordinates pos1 = new Coordinates();
-			pos1.setLat(userLocation.getLat());
-			pos1.setLon(userLocation.getLon());
-			Coordinates pos2 = new Coordinates();
-			pos2.setLat(coordinates.get("lat").getAsDouble());
-			pos2.setLon(coordinates.get("lon").getAsDouble());
-			Double value = null;
-			if (distanceUnit == DistanceUnit.mi) {
-				value = HaversineDistanceCalculator.getDistanceInMi(pos1, pos2);
-			} else {
-				value = HaversineDistanceCalculator.getDistanceInKm(pos1, pos2);
-			}
-			if (value != null) {
-				Distance distance = new Distance();
-				distance.setValue(value);
-				distance.setUnit(distanceUnit);
-				return distance;
-			}
-		}
-		return null;
-	}
+	
 
-	private Search buildSearchQuery() {
+	@Override
+	protected Search buildSearchQuery() {
 		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 		BaseQueryBuilder query;
 		if (keyword != null && !keyword.isEmpty()) {
@@ -270,7 +211,7 @@ public class RestaurantFinder {
 			} else {
 				sort.order(org.elasticsearch.search.sort.SortOrder.ASC);
 			}
-		} else {
+		} else if (sortBy == SortBy.hotness) {
 			sort = SortBuilders.fieldSort("like_count");
 			if (sortOrder == SortOrder.decrease) {
 				sort.order(org.elasticsearch.search.sort.SortOrder.DESC);
@@ -286,10 +227,14 @@ public class RestaurantFinder {
 			} 
 			FilterBuilder geoDistanceFilter = FilterBuilders.geoDistanceFilter("coordinates").distance(range.getDistance().getValue(), unit);
 			FilteredQueryBuilder filterreQuery = QueryBuilders.filteredQuery(query, geoDistanceFilter);
-			searchSourceBuilder.query(filterreQuery).sort(sort).from(offset).size(limit).minScore(relevanceScoreThreshold);
+			searchSourceBuilder.query(filterreQuery);
 		} else {
-			searchSourceBuilder.query(query).sort(sort).from(offset).size(limit).minScore(relevanceScoreThreshold);
+			searchSourceBuilder.query(query);
 		}
+		if (sort != null) {
+			searchSourceBuilder.sort(sort);
+		}
+		searchSourceBuilder.from(offset).size(limit).minScore(relevanceScoreThreshold);
 		
 		if (!returnAllFields) {
 			searchSourceBuilder.fields(fields);
