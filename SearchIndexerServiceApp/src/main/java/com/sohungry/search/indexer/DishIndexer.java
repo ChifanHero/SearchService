@@ -30,6 +30,7 @@ import com.sohungry.search.parse.util.ParseValidator;
 
 import io.searchbox.client.JestResult;
 import io.searchbox.core.Bulk;
+import io.searchbox.core.Delete;
 import io.searchbox.core.Index;
 
 public class DishIndexer {
@@ -78,6 +79,9 @@ public class DishIndexer {
 			Map<String, DishDocument> dishToDoc = new HashMap<String, DishDocument>();
 			
 			for (DishSource source : sources) {
+				if (source == null || source.getObjectId() == null || source.getObjectId().isEmpty()) {
+					continue;
+				}
 				DishDocument document = new DishDocument();
 				document.setObjectId(source.getObjectId());
 				document.setName(source.getName());
@@ -296,6 +300,18 @@ public class DishIndexer {
 				e.printStackTrace();
 			}
 		} 
+		return null;
+	}
+
+	public JestResult deleteDish(String id) {
+		if (id == null || id.isEmpty()) return null;
+		Delete delete = new Delete.Builder(id).index(Indices.FOOD).type(Types.DISH).build();
+		try {
+			return ElasticsearchRestClientFactory.getRestClient().execute(delete);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		return null;
 	}
 

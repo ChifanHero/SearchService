@@ -25,6 +25,7 @@ import com.sohungry.search.parse.config.ParseClass;
 
 import io.searchbox.client.JestResult;
 import io.searchbox.core.Bulk;
+import io.searchbox.core.Delete;
 import io.searchbox.core.Index;
 
 public class DishListIndexer {
@@ -69,6 +70,9 @@ public class DishListIndexer {
 //			Map<String, RestaurantDocument> imagesToFetch = new HashMap<String, RestaurantDocument>();
 			Map<String, DishListDocument> listToDoc = new HashMap<String, DishListDocument>();
 			for (DishListSource source : sources) {
+				if (source == null || source.getObjectId() == null || source.getObjectId().isEmpty()) {
+					continue;
+				}
 				DishListDocument document = new DishListDocument();
 				document.setObjectId(source.getObjectId());
 				document.setName(source.getName());
@@ -235,6 +239,18 @@ public class DishListIndexer {
 				e.printStackTrace();
 			}
 		} 
+		return null;
+	}
+
+	public JestResult deleteDishList(String id) {
+		if (id == null || id.isEmpty()) return null;
+		Delete delete = new Delete.Builder(id).index(Indices.FOOD).type(Types.LIST).build();
+		try {
+			return ElasticsearchRestClientFactory.getRestClient().execute(delete);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		return null;
 	}
 
