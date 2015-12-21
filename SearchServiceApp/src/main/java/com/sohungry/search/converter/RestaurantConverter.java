@@ -1,5 +1,6 @@
 package com.sohungry.search.converter;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import com.google.gson.JsonObject;
@@ -134,12 +135,19 @@ public class RestaurantConverter implements Converter<Restaurant>{
 			}
 			if (value != null) {
 				Distance distance = new Distance();
-				distance.setValue(value);
+				distance.setValue(getScale2DoubleValue(value));
 				distance.setUnit(distanceUnit);
 				return distance;
 			}
 		}
 		return null;
+	}
+	
+	private Double getScale2DoubleValue(Double original) {
+		if (original == null) return null;
+		Double toBeTruncated = new Double(original);
+		Double truncatedDouble=new BigDecimal(toBeTruncated ).setScale(1, BigDecimal.ROUND_HALF_UP).doubleValue();
+		return truncatedDouble;
 	}
 
 	

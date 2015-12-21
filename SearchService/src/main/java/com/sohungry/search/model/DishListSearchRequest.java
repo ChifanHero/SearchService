@@ -1,6 +1,7 @@
 package com.sohungry.search.model;
 
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -10,10 +11,16 @@ public class DishListSearchRequest {
 	private String keyword;
 	private Integer offset;
 	private Integer limit;
+	
+	@JsonProperty("sort_by")
 	private SortBy sortBy;
+	
+	@JsonProperty("sort_order")
 	private SortOrder sortOrder;
 	private TuningParams parameters;
 	private Output output;
+	
+	@JsonProperty("user_location")
 	private Location userLocation;
 	private Range range;
 	

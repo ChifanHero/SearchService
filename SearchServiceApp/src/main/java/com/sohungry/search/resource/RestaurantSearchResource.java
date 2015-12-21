@@ -21,7 +21,7 @@ import com.sohungry.search.model.RestaurantSearchResponse;
 public class RestaurantSearchResource {
 	
 	
-	@RequestMapping(value = "/restaurant", method = RequestMethod.POST, produces = {"application/json"})
+	@RequestMapping(value = "/restaurants", method = RequestMethod.POST, produces = {"application/json"})
     public RestaurantSearchResponse search(@RequestBody RestaurantSearchRequest searchRequest, HttpServletRequest request, HttpServletResponse response) throws IOException {
         
 		List<Restaurant> searchResults = new RestaurantFinder.Builder(searchRequest).build().find();
