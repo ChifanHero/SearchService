@@ -22,8 +22,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.sohungry.search.converter.DishListConverter;
 import com.sohungry.search.elastic.factory.ElasticsearchRestClientFactory;
-import com.sohungry.search.index.Indices;
-import com.sohungry.search.index.Types;
+import com.sohungry.search.meta.Indices;
+import com.sohungry.search.meta.Types;
 import com.sohungry.search.model.DishList;
 import com.sohungry.search.model.DishListField;
 import com.sohungry.search.model.DishListSearchRequest;
@@ -232,7 +232,7 @@ public class DishListFinder extends AbstractFinder<DishList>{
 		}
 		Search search = new Search.Builder(searchSourceBuilder.toString())
 		                                .addIndex(Indices.FOOD)
-		                                .addType(Types.LIST)
+		                                .addType(Types.DISHLIST)
 		                                .build();
 		return search;
 	}

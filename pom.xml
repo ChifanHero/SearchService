@@ -140,11 +140,6 @@
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>com.sohungry.search.index</groupId>
-				<artifactId>SearchIndexerServiceApp</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
 				<groupId>com.sohungry.search.client</groupId>
 				<artifactId>SearchClient</artifactId>
 				<version>${project.version}</version>
@@ -152,11 +147,6 @@
 			<dependency>
 				<groupId>com.sohungry.search.search</groupId>
 				<artifactId>SearchService</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.sohungry.search.index</groupId>
-				<artifactId>SearchIndexService</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
@@ -226,11 +216,9 @@
 				<activeByDefault>true</activeByDefault>
 			</activation>
 			<modules>
-				<module>SearchIndexerServiceApp</module>
 				<module>SearchServiceApp</module>
 				<module>SearchClient</module>
 				<module>SearchService</module>
-				<module>SearchIndexService</module>
 			</modules>
 		</profile>
 	</profiles>
