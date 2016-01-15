@@ -73,7 +73,7 @@
 
 | Fields | Description                                                   | Type         | Required | Default | 
 | -------|:--------------------------------------------------------------|:-------------|:--------:|:-------:|
-| distanc_unit | control what unit to use for the distance in the output | Enum (mi, km)| optional | mi      |
+| distance_unit | control what unit to use for the distance in the output | Enum (mi, km)| optional | mi      |
 
 
 **Range**    
