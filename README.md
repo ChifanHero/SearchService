@@ -15,6 +15,8 @@
 | range         | distance range constraint                               | **Range**                           | optional |
 
 
+
+
 **GET /dish** - search dishes
 
 | Fields        | Description                                             | Type                                | Required | 
@@ -32,6 +34,8 @@
 | menu_id       | the menu       this dish belong to                      | String                              | optional |
 
 
+
+
 **GET /lists** - search dish lists
 
 | Fields        | Description                                             | Type                                | Required | 
@@ -45,6 +49,8 @@
 | output        | output selector. <br />To control which field to return.| **Output**                          | optional |
 | user_location | user location                                           | **Location**                        | optional |
 | range         | distance range constraint                               | **Range**                           | optional |
+
+
 
 
 **Custom Objects**    
