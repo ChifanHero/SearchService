@@ -97,7 +97,7 @@
 | Fields | Description    | Type             | Required | 
 | -------|:---------------|:-----------------|:--------:|
 | value  | distance value | double           | required |
-| lon    | distance unit  | Enum (mi, km)    | optional |
+| unit   | distance unit  | Enum (mi, km)    | optional |
 
 
 
