@@ -7,8 +7,8 @@
 | keyword       | keyword                                                 | String                              | optional |
 | offset        | offset                                                  | Integer                             | optional |
 | limit         | limit                                                   | Integer                             | optional |
-| sort_by       | sort critera. default = relevance                       | Enum (hotness, distance, relevance) | optional |
-| sort_order    | sort order. default = decrease                          | Enum (increase, decrease)           | optional |
+| sort_by       | sort critera. default = relevance                       | Enum (HOTNESS, DISTANCE, RELEVANCE) | optional |
+| sort_order    | sort order. default = decrease                          | Enum (ASCEND, DESCEND)              | optional |
 | parameters    | tuning parameters                                       | **TuningParams**                    | optional |
 | output        | output selector. <br />To control which field to return.| **Output**                          | optional |
 | user_location | user location                                           | **Location**                        | optional |
@@ -24,8 +24,8 @@
 | keyword       | keyword                                                 | String                              | optional |
 | offset        | offset                                                  | Integer                             | optional |
 | limit         | limit                                                   | Integer                             | optional |
-| sort_by       | sort critera. default = relevance                       | Enum (hotness, distance, relevance) | optional |
-| sort_order    | sort order. default = decrease                          | Enum (increase, decrease)           | optional |
+| sort_by       | sort critera. default = relevance                       | Enum (HOTNESS, DISTANCE, RELEVANCE) | optional |
+| sort_order    | sort order. default = decrease                          | Enum (ASCEND, DESCEND)              | optional |
 | parameters    | tuning parameters                                       | **TuningParams**                    | optional |
 | output        | output selector. <br />To control which field to return.| **Output**                          | optional |
 | user_location | user location                                           | **Location**                        | optional |
@@ -43,8 +43,8 @@
 | keyword       | keyword                                                 | String                              | optional |
 | offset        | offset                                                  | Integer                             | optional |
 | limit         | limit                                                   | Integer                             | optional |
-| sort_by       | sort critera. default = relevance                       | Enum (hotness, distance, relevance) | optional |
-| sort_order    | sort order. default = decrease                          | Enum (increase, decrease)           | optional |
+| sort_by       | sort critera. default = relevance                       | Enum (HOTNESS, DISTANCE, RELEVANCE) | optional |
+| sort_order    | sort order. default = decrease                          | Enum (ASCEND, DESCEND)              | optional |
 | parameters    | tuning parameters                                       | **TuningParams**                    | optional |
 | output        | output selector. <br />To control which field to return.| **Output**                          | optional |
 | user_location | user location                                           | **Location**                        | optional |
@@ -97,7 +97,7 @@
 | Fields | Description    | Type             | Required | 
 | -------|:---------------|:-----------------|:--------:|
 | value  | distance value | double           | required |
-| unit   | distance unit  | Enum (mi, km)    | optional |
+| unit   | distance unit  | Enum (MI, KM)    | optional |
 
 
 
