@@ -128,7 +128,7 @@ public class RestaurantConverter implements Converter<Restaurant>{
 			pos2.setLat(coordinates.get("lat").getAsDouble());
 			pos2.setLon(coordinates.get("lon").getAsDouble());
 			Double value = null;
-			if (distanceUnit == DistanceUnit.mi) {
+			if (distanceUnit == DistanceUnit.MI) {
 				value = HaversineDistanceCalculator.getDistanceInMi(pos1, pos2);
 			} else {
 				value = HaversineDistanceCalculator.getDistanceInKm(pos1, pos2);

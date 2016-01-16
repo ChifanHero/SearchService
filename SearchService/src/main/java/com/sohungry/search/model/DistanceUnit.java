@@ -7,7 +7,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
 public enum DistanceUnit {
 	
-	mi,
-	km
+	MI,
+	KM
 
 }

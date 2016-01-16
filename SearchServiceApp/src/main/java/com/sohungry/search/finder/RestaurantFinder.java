@@ -70,10 +70,10 @@ public class RestaurantFinder extends AbstractFinder<Restaurant> {
 		
 		private static final int DEFAULT_OFFSET = 0;
 		private static final int DEFAULT_LIMIT = 20;
-		private static final SortBy DEFAULT_SORTBY = SortBy.hotness;
-		private static final SortOrder DEFAULT_SORT_ORDER = SortOrder.decrease;
+		private static final SortBy DEFAULT_SORTBY = SortBy.RELEVANCE;
+		private static final SortOrder DEFAULT_SORT_ORDER = SortOrder.DESCEND;
 		private static final float DEFAULT_REL_THRESH = (float) 0.3;
-		private static final DistanceUnit DEFAULT_DISTANCE_UNIT = DistanceUnit.mi;
+		private static final DistanceUnit DEFAULT_DISTANCE_UNIT = DistanceUnit.MI;
 		
 		private String keyword;
 		private int offset = DEFAULT_OFFSET;
@@ -204,16 +204,16 @@ public class RestaurantFinder extends AbstractFinder<Restaurant> {
 		
 
 		SortBuilder sort = null;
-		if (sortBy == SortBy.distance && userLocation != null) {
+		if (sortBy == SortBy.DISTANCE && userLocation != null) {
 			sort = SortBuilders.geoDistanceSort("coordinates").point(userLocation.getLat(), userLocation.getLon());
-			if (sortOrder == SortOrder.decrease) {
+			if (sortOrder == SortOrder.DESCEND) {
 				sort.order(org.elasticsearch.search.sort.SortOrder.DESC);
 			} else {
 				sort.order(org.elasticsearch.search.sort.SortOrder.ASC);
 			}
-		} else if (sortBy == SortBy.hotness) {
+		} else if (sortBy == SortBy.HOTNESS) {
 			sort = SortBuilders.fieldSort("like_count");
-			if (sortOrder == SortOrder.decrease) {
+			if (sortOrder == SortOrder.DESCEND) {
 				sort.order(org.elasticsearch.search.sort.SortOrder.DESC);
 			} else {
 				sort.order(org.elasticsearch.search.sort.SortOrder.ASC);
@@ -222,7 +222,7 @@ public class RestaurantFinder extends AbstractFinder<Restaurant> {
 		
 		if (this.range != null && this.range.getCenter() != null && this.range.getDistance() != null) {
 			org.elasticsearch.common.unit.DistanceUnit unit = org.elasticsearch.common.unit.DistanceUnit.MILES;
-			if (this.range.getDistance() != null && this.range.getDistance().getUnit() != null && this.range.getDistance().getUnit() == DistanceUnit.km) {
+			if (this.range.getDistance() != null && this.range.getDistance().getUnit() != null && this.range.getDistance().getUnit() == DistanceUnit.KM) {
 				unit = org.elasticsearch.common.unit.DistanceUnit.KILOMETERS;
 			} 
 			FilterBuilder geoDistanceFilter = FilterBuilders.geoDistanceFilter("coordinates").distance(range.getDistance().getValue(), unit);
