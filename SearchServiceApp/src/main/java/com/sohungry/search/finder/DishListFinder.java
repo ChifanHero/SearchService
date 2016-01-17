@@ -17,6 +17,8 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -37,6 +39,8 @@ import io.searchbox.core.Search;
 import io.searchbox.core.SearchResult;
 
 public class DishListFinder extends AbstractFinder<DishList>{
+	
+	private final static Logger LOGGER = LoggerFactory.getLogger(DishFinder.class);
 	
 	private String keyword;
 	private Integer offset;
@@ -151,8 +155,7 @@ public class DishListFinder extends AbstractFinder<DishList>{
 				}
 			}	
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LOGGER.error("Error during search", e);
 		}
 		return Collections.emptyList();
 	}

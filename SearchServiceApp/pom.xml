@@ -122,7 +122,17 @@
 		<dependency>
 			<groupId>com.sohungry.search.search</groupId>
 			<artifactId>SearchService</artifactId>
-			</dependency>
+		</dependency>
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
+			<type>jar</type>
+		</dependency>
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-core</artifactId>
+			<type>jar</type>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>
