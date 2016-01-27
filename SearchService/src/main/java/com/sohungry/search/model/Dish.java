@@ -1,6 +1,9 @@
 package com.sohungry.search.model;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
@@ -34,6 +37,8 @@ public class Dish {
 	
 	@JsonProperty("related_lists")
 	private List<DishList> relatedLists;
+	
+	private Map<String, List<String>> diagInfo;
 	
 	public String getId() {
 		return id;
@@ -94,6 +99,23 @@ public class Dish {
 	}
 	public void setRelatedLists(List<DishList> relatedLists) {
 		this.relatedLists = relatedLists;
+	}
+	public Map<String, List<String>> getDiagInfo() {
+		return diagInfo;
+	}
+	public void setDiagInfo(Map<String, List<String>> diagInfo) {
+		this.diagInfo = diagInfo;
+	}
+	
+	public void addDiagInfo(String name, String value) {
+		if (this.diagInfo == null) {
+			this.diagInfo = new HashMap<String, List<String>>();
+		}
+		if (this.diagInfo.get(name) == null) {
+			List<String> values = new ArrayList<String>();
+			this.diagInfo.put(name, values);
+		}
+		this.diagInfo.get(name).add(value);
 	}
 
 }

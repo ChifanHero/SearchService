@@ -15,12 +15,14 @@ import org.elasticsearch.index.query.FilteredQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.sohungry.search.converter.DishConverter;
 import com.sohungry.search.elastic.factory.ElasticsearchRestClientFactory;
@@ -55,6 +57,9 @@ public class DishFinder extends AbstractFinder<Dish> {
 	private String restaurantId;
 	private String menuId;
 	private Range range;
+	private boolean debugMode;
+	private boolean highlightInField;
+	private String language = "zh";
 	
 	private DishFinder (Builder builder) {
 		this.keyword = builder.keyword;
@@ -70,16 +75,20 @@ public class DishFinder extends AbstractFinder<Dish> {
 		this.restaurantId = builder.restaurantId;
 		this.menuId = builder.menuId;
 		this.range = builder.range;
+		this.debugMode = builder.debugMode;
+		this.highlightInField = builder.highlightInField;
+		this.language = builder.language;
+		
 	}
 
 	public static class Builder {
 
 		private static final int DEFAULT_OFFSET = 0;
 		private static final int DEFAULT_LIMIT = 20;
-		private static final SortOrder DEFAULT_SORT_ORDER = SortOrder.DESCEND;
-		private static final SortBy DEFAULT_SORT_BY = SortBy.RELEVANCE;
-		private static final float DEFAULT_REL_THRESH = (float) 0.3;
-		private static final DistanceUnit DEFAULT_DISTANCE_UNIT = DistanceUnit.MI;
+		private static final SortOrder DEFAULT_SORT_ORDER = SortOrder.descend;
+		private static final SortBy DEFAULT_SORT_BY = SortBy.relevance;
+		private static final float DEFAULT_REL_THRESH = (float) 1.0;
+		private static final DistanceUnit DEFAULT_DISTANCE_UNIT = DistanceUnit.mi;
 		
 		private String keyword;
 		private int offset = DEFAULT_OFFSET;
@@ -94,6 +103,9 @@ public class DishFinder extends AbstractFinder<Dish> {
 		private String restaurantId;
 		private String menuId;
 		private Range range;
+		private boolean debugMode;
+		private boolean highlightInField;
+		private String language = "zh";
 
 		public Builder(DishSearchRequest searchRequest) {
 			if (searchRequest == null) {
@@ -128,7 +140,7 @@ public class DishFinder extends AbstractFinder<Dish> {
 			this.restaurantId = searchRequest.getRestaurantId();
 			this.menuId = searchRequest.getMenuId();
 			this.range = searchRequest.getRange();
-			
+			this.highlightInField = searchRequest.isHighlightInField();
 		}
 
 		private void normalizeFields(List<String> fields) {
@@ -148,6 +160,24 @@ public class DishFinder extends AbstractFinder<Dish> {
 				}
 			}
 			
+		}
+
+		public boolean isDebugMode() {
+			return debugMode;
+		}
+
+		public Builder setDebugMode(boolean debugMode) {
+			this.debugMode = debugMode;
+			return this;
+		}
+
+		public String getLanguage() {
+			return language;
+		}
+
+		public Builder setLanguage(String language) {
+			this.language = language;
+			return this;
 		}
 
 		public DishFinder build() {
@@ -188,8 +218,61 @@ public class DishFinder extends AbstractFinder<Dish> {
 				continue;
 			}
 			JsonObject source = hit.get("_source").getAsJsonObject();
-			Dish dish = new DishConverter(fields, userLocation, distanceUnit).convert(source);
+			Dish dish = new DishConverter(fields, userLocation, distanceUnit, this.language).convert(source);		
+			if (highlightInField && hit.get("highlight") != null && hit.get("highlight").getAsJsonObject() != null) {
+				JsonObject highlightResult = hit.get("highlight").getAsJsonObject();
+				String highlightedName = null;
+				String highlightedEnglishName = null;
+				if (highlightResult.get("name") != null) {
+					JsonArray nameHighlight = highlightResult.get("name").getAsJsonArray();
+					if (nameHighlight != null) {
+						JsonElement element = nameHighlight.get(0);
+						if (element != null) {
+							highlightedName = element.getAsString();
+						} 
+					}
+				} 
+				if (highlightResult.get("english_name") != null) {
+					JsonArray englishNameHighlight = highlightResult.get("english_name").getAsJsonArray();
+					if (englishNameHighlight != null) {
+						JsonArray nameHighlight = highlightResult.get("english_name").getAsJsonArray();
+						if (nameHighlight != null) {
+							
+							JsonElement element = nameHighlight.get(0);
+							if (element != null) {
+								highlightedEnglishName = element.getAsString();
+							}
+						}
+					}
+				} 
+				if ("zh".equals(this.language)) {
+					String name = dish.getName();
+					if (highlightedName != null) {
+						name = highlightedName;
+					}
+					if (highlightedEnglishName != null) {
+						name = name + " (" + highlightedEnglishName + ")";
+					}
+					dish.setName(name);
+				} else if ("en".equals(this.language)) {
+					String name = dish.getName();
+					if (highlightedEnglishName != null) {
+						name = highlightedEnglishName;
+					}
+					if (highlightedName != null) {
+						name = name + " (" + highlightedName + ")";
+					}
+					dish.setName(name);
+				}
+			}
 			results.add(dish);
+			if (debugMode) {
+				double score = 0;
+				if (hit.get("_score") != null) {
+					score = hit.get("_score").getAsDouble();
+				}
+				dish.addDiagInfo("score", String.valueOf(score));
+			}
 		}
 		return results;
 	}
@@ -215,16 +298,16 @@ public class DishFinder extends AbstractFinder<Dish> {
 		
 		
 		SortBuilder sort = null;
-		if (sortBy == SortBy.DISTANCE && userLocation != null) {
+		if (sortBy == SortBy.distance && userLocation != null) {
 			sort = SortBuilders.geoDistanceSort("coordinates").point(userLocation.getLat(), userLocation.getLon());
-			if (sortOrder == SortOrder.DESCEND) {
+			if (sortOrder == SortOrder.descend) {
 				sort.order(org.elasticsearch.search.sort.SortOrder.DESC);
 			} else {
 				sort.order(org.elasticsearch.search.sort.SortOrder.ASC);
 			}
-		} else if (sortBy == SortBy.HOTNESS) {
+		} else if (sortBy == SortBy.hotness) {
 			sort = SortBuilders.fieldSort("like_count");
-			if (sortOrder == SortOrder.DESCEND) {
+			if (sortOrder == SortOrder.descend) {
 				sort.order(org.elasticsearch.search.sort.SortOrder.DESC);
 			} else {
 				sort.order(org.elasticsearch.search.sort.SortOrder.ASC);
@@ -257,6 +340,9 @@ public class DishFinder extends AbstractFinder<Dish> {
 		if (!returnAllFields) {
 			searchSourceBuilder.fields(fields);
 		}
+		if (highlightInField) {
+			searchSourceBuilder.highlight(new HighlightBuilder().preTags("<b>").postTags("</b>").field("name").field("english_name"));
+		}
 		Search search = new Search.Builder(searchSourceBuilder.toString())
 		                                // multiple index or types can be added.
 		                                .addIndex(Indices.FOOD)
@@ -283,7 +369,7 @@ public class DishFinder extends AbstractFinder<Dish> {
 	private FilterBuilder createRangeFilter() {
 		if (this.range != null && this.range.getDistance() != null && this.range.getCenter() != null) {
 			org.elasticsearch.common.unit.DistanceUnit unit = org.elasticsearch.common.unit.DistanceUnit.MILES;
-			if (this.range.getDistance() != null && this.range.getDistance().getUnit() != null && this.range.getDistance().getUnit() == DistanceUnit.KM) {
+			if (this.range.getDistance() != null && this.range.getDistance().getUnit() != null && this.range.getDistance().getUnit() == DistanceUnit.km) {
 				unit = org.elasticsearch.common.unit.DistanceUnit.KILOMETERS;
 			} 
 			FilterBuilder geoDistanceFilter = FilterBuilders.geoDistanceFilter("from_restaurant.coordinates").distance(range.getDistance().getValue(), unit);

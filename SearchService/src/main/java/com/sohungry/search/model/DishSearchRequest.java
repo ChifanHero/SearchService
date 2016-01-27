@@ -29,6 +29,7 @@ public class DishSearchRequest {
 	@JsonProperty("menu_id")
 	private String menuId;
 	private Range range;
+	private boolean highlightInField;
 	
 	public String getKeyword() {
 		return keyword;
@@ -95,5 +96,11 @@ public class DishSearchRequest {
 	}
 	public void setRange(Range range) {
 		this.range = range;
+	}
+	public boolean isHighlightInField() {
+		return highlightInField;
+	}
+	public void setHighlightInField(boolean highlightInField) {
+		this.highlightInField = highlightInField;
 	}
 }

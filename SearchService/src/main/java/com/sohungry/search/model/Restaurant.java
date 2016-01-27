@@ -1,5 +1,10 @@
 package com.sohungry.search.model;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
@@ -11,8 +16,8 @@ public class Restaurant {
 	private String id;
 	private String name;
 	
-	@JsonProperty("english_name")
-	private String englishName;
+//	@JsonProperty("english_name")
+//	private String englishName;
 	private String address;
 	private Distance distance;
 	
@@ -30,6 +35,9 @@ public class Restaurant {
 	private String phone;
 	private String hours;
 	private Picture picture;
+//	private Map<String, List<String>> highlight;
+	private List<String> dishes;
+	private Map<String, List<String>> diagInfo;
 	
 	public String getId() {
 		return id;
@@ -43,12 +51,12 @@ public class Restaurant {
 	public void setName(String name) {
 		this.name = name;
 	}
-	public String getEnglishName() {
-		return englishName;
-	}
-	public void setEnglishName(String englishName) {
-		this.englishName = englishName;
-	}
+//	public String getEnglishName() {
+//		return englishName;
+//	}
+//	public void setEnglishName(String englishName) {
+//		this.englishName = englishName;
+//	}
 	public String getAddress() {
 		return address;
 	}
@@ -102,6 +110,34 @@ public class Restaurant {
 	}
 	public void setPicture(Picture picture) {
 		this.picture = picture;
+	}
+public List<String> getDishes() {
+		return dishes;
+	}
+	public void setDishes(List<String> dishes) {
+		this.dishes = dishes;
+	}
+	//	public Map<String, List<String>> getHighlight() {
+//		return highlight;
+//	}
+//	public void setHighlight(Map<String, List<String>> highlight) {
+//		this.highlight = highlight;
+//	}
+	public Map<String, List<String>> getDiagInfo() {
+		return diagInfo;
+	}
+	public void setDiagInfo(Map<String, List<String>> diagInfo) {
+		this.diagInfo = diagInfo;
+	}
+	public void addDiagInfo(String name, String value) {
+		if (this.diagInfo == null) {
+			this.diagInfo = new HashMap<String, List<String>>();
+		}
+		if (this.diagInfo.get(name) == null) {
+			List<String> values = new ArrayList<String>();
+			this.diagInfo.put(name, values);
+		}
+		this.diagInfo.get(name).add(value);
 	}
 
 }

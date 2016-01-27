@@ -23,7 +23,9 @@ public class DishSearchResource {
 	@RequestMapping(value = "/dishes", method = RequestMethod.POST, produces = {"application/json"})
     public DishSearchResponse search(@RequestBody DishSearchRequest searchRequest, HttpServletRequest request, HttpServletResponse response) throws IOException {
         
-		List<Dish> searchResults = new DishFinder.Builder(searchRequest).build().find();
+		boolean debugMode = "1".equals(request.getHeader("debugMode"));
+		String language = request.getLocale().getLanguage();
+		List<Dish> searchResults = new DishFinder.Builder(searchRequest).setDebugMode(debugMode).setLanguage(language).build().find();
 		DishSearchResponse searchResponse = new DishSearchResponse();
 		searchResponse.setResults(searchResults);
 		return searchResponse;

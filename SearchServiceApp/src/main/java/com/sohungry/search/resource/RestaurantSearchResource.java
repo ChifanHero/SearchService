@@ -24,7 +24,9 @@ public class RestaurantSearchResource {
 	@RequestMapping(value = "/restaurants", method = RequestMethod.POST, produces = {"application/json"})
     public RestaurantSearchResponse search(@RequestBody RestaurantSearchRequest searchRequest, HttpServletRequest request, HttpServletResponse response) throws IOException {
         
-		List<Restaurant> searchResults = new RestaurantFinder.Builder(searchRequest).build().find();
+		boolean debugMode = "1".equals(request.getHeader("debugMode"));
+		String language = request.getLocale().getLanguage();
+		List<Restaurant> searchResults = new RestaurantFinder.Builder(searchRequest).setDebugMode(debugMode).setLanguage(language).build().find();
 		RestaurantSearchResponse searchResponse = new RestaurantSearchResponse();
 		searchResponse.setResults(searchResults);
 		return searchResponse;

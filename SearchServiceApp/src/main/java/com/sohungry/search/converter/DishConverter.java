@@ -20,15 +20,17 @@ public class DishConverter implements Converter<Dish>{
 	private List<String> fields;
 	private Location userLocation;
 	private DistanceUnit distanceUnit;
+	private String language;
 	
 	public DishConverter(List<String> fields) {
-		this(fields, null, null);
+		this(fields, null, null, null);
 	}
 	
-	public DishConverter(List<String> fields, Location userLocation, DistanceUnit distanceUnit) {
+	public DishConverter(List<String> fields, Location userLocation, DistanceUnit distanceUnit, String language) {
 		this.fields = fields;
 		this.userLocation = userLocation;
 		this.distanceUnit = distanceUnit;
+		this.language = language;
 	}
 
 	@Override
@@ -51,7 +53,9 @@ public class DishConverter implements Converter<Dish>{
 		
 		if (returnAll || fields.contains(DishField.english_name.name())) {
 			if (source.get("english_name") != null && !source.get("english_name").isJsonNull()) {
-				dish.setEnglishName(source.get("english_name").getAsString());
+				if ("en".equals(language)) {
+					dish.setName(source.get("english_name").getAsString());
+				} 
 			}
 		}
 		
@@ -75,7 +79,9 @@ public class DishConverter implements Converter<Dish>{
 		
 		if (returnAll || fields.contains(DishField.name.name())) {
 			if (source.get("name") != null && !source.get("name").isJsonNull()) {
-				dish.setName(source.get("name").getAsString());
+				if ("zh".equals(language)) {
+					dish.setName(source.get("name").getAsString());
+				} 
 			}
 		}
 		
@@ -104,7 +110,7 @@ public class DishConverter implements Converter<Dish>{
 				restaurantFields.add(RestaurantField.name.name());
 				restaurantFields.add(RestaurantField.english_name.name());
 				restaurantFields.add(RestaurantField.distance.name());
-				Restaurant fromRestaurant = new RestaurantConverter(restaurantFields, this.userLocation, this.distanceUnit).convert(restaurant);
+				Restaurant fromRestaurant = new RestaurantConverter(restaurantFields, this.userLocation, this.distanceUnit, this.language).convert(restaurant);
 				dish.setFromRestaurant(fromRestaurant);
 			}
 		}

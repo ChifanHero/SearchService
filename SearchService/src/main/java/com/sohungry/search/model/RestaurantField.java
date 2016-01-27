@@ -18,7 +18,8 @@ public enum RestaurantField {
 	neutral_count,
 	phone,
 	hours,
-	picture;
+	picture,
+	dishes;
 	
 	public static RestaurantField fromString(String text) {
 		if (text != null) {

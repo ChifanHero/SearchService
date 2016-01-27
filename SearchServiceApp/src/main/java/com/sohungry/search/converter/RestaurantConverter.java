@@ -1,8 +1,10 @@
 package com.sohungry.search.converter;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.sohungry.search.distance.Coordinates;
 import com.sohungry.search.distance.HaversineDistanceCalculator;
@@ -12,21 +14,24 @@ import com.sohungry.search.model.Location;
 import com.sohungry.search.model.Picture;
 import com.sohungry.search.model.Restaurant;
 import com.sohungry.search.model.RestaurantField;
+import com.sohungry.search.util.StringUtil;
 
 public class RestaurantConverter implements Converter<Restaurant>{
 	
 	private List<String> fields;
 	private Location userLocation;
 	private DistanceUnit distanceUnit;
+	private String language;
 	
 	public RestaurantConverter(List<String> fields) {
-		this(fields, null, null);
+		this(fields, null, null, null);
 	}
 	
-	public RestaurantConverter(List<String> fields, Location userLocation, DistanceUnit distanceUnit) {
+	public RestaurantConverter(List<String> fields, Location userLocation, DistanceUnit distanceUnit, String language) {
 		this.fields = fields;
 		this.userLocation = userLocation;
 		this.distanceUnit = distanceUnit;
+		this.language = language;
 	}
 
 	@Override
@@ -61,7 +66,10 @@ public class RestaurantConverter implements Converter<Restaurant>{
 		
 		if (returnAll || fields.contains(RestaurantField.english_name.name())) {
 			if (source.get("english_name") != null && !source.get("english_name").isJsonNull()) {
-				restaurant.setEnglishName(source.get("english_name").getAsString());
+				if ("en".equals(language)) {
+					restaurant.setName(source.get("english_name").getAsString());
+				} 
+				
 			}
 		}
 		
@@ -85,7 +93,9 @@ public class RestaurantConverter implements Converter<Restaurant>{
 		
 		if (returnAll || fields.contains(RestaurantField.name.name())) {
 			if (source.get("name") != null && !source.get("name").isJsonNull()) {
-				restaurant.setName(source.get("name").getAsString());
+				if ("zh".equals(language)) {
+					restaurant.setName(source.get("name").getAsString());
+				} 
 			}
 		}
 		
@@ -113,6 +123,30 @@ public class RestaurantConverter implements Converter<Restaurant>{
 				}
 			}
 		}
+		if (returnAll || fields.contains(RestaurantField.dishes.name())) {
+			if (source.get("dishes") != null && !source.get("dishes").isJsonNull()) {
+//				restaurant.setDistance(getDistance(source.get("dishes").getAsJsonObject()));
+				JsonArray array = source.get("dishes").getAsJsonArray();
+				List<String> dishes = new ArrayList<String>();
+				for (int i = 0; i <array.size(); i++) {
+					String dish = array.get(i).getAsString();
+					if ("en".equals(language)) {
+						if (!StringUtil.containsHanScript(dish)) {
+							if (dishes.size() < 20) {
+								dishes.add(dish);
+							}
+						}
+					} else if ("zh".equals(language)) {
+						if (StringUtil.containsHanScript(dish)) {
+							if (dishes.size() < 20) {
+								dishes.add(dish);
+							}
+						}
+					}
+				}
+				restaurant.setDishes(dishes);
+			}
+		}
 		
 		return restaurant;	
 	}
@@ -128,7 +162,7 @@ public class RestaurantConverter implements Converter<Restaurant>{
 			pos2.setLat(coordinates.get("lat").getAsDouble());
 			pos2.setLon(coordinates.get("lon").getAsDouble());
 			Double value = null;
-			if (distanceUnit == DistanceUnit.MI) {
+			if (distanceUnit == DistanceUnit.mi) {
 				value = HaversineDistanceCalculator.getDistanceInMi(pos1, pos2);
 			} else {
 				value = HaversineDistanceCalculator.getDistanceInKm(pos1, pos2);
