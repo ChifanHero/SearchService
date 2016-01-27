@@ -1,5 +1,10 @@
 package com.sohungry.search.model;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
@@ -13,6 +18,10 @@ public class DishList {
 	
 	@JsonProperty("member_count")
 	private Long memberCount;
+	
+	private List<String> dishes;
+	
+	private Map<String, List<String>> diagInfo;
 
 	public String getId() {
 		return id;
@@ -36,6 +45,32 @@ public class DishList {
 
 	public void setMemberCount(Long memberCount) {
 		this.memberCount = memberCount;
+	}
+	
+	public List<String> getDishes() {
+		return dishes;
+	}
+
+	public void setDishes(List<String> dishes) {
+		this.dishes = dishes;
+	}
+
+	public Map<String, List<String>> getDiagInfo() {
+		return diagInfo;
+	}
+	public void setDiagInfo(Map<String, List<String>> diagInfo) {
+		this.diagInfo = diagInfo;
+	}
+	
+	public void addDiagInfo(String name, String value) {
+		if (this.diagInfo == null) {
+			this.diagInfo = new HashMap<String, List<String>>();
+		}
+		if (this.diagInfo.get(name) == null) {
+			List<String> values = new ArrayList<String>();
+			this.diagInfo.put(name, values);
+		}
+		this.diagInfo.get(name).add(value);
 	}
 
 }

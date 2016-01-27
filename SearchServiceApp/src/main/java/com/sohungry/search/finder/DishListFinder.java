@@ -15,12 +15,14 @@ import org.elasticsearch.index.query.FilteredQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.sohungry.search.converter.DishListConverter;
 import com.sohungry.search.elastic.factory.ElasticsearchRestClientFactory;
@@ -34,6 +36,8 @@ import com.sohungry.search.model.Location;
 import com.sohungry.search.model.Range;
 import com.sohungry.search.model.SortBy;
 import com.sohungry.search.model.SortOrder;
+import com.sohungry.search.util.HighlightImportanceComparator;
+import com.sohungry.search.util.StringUtil;
 
 import io.searchbox.core.Search;
 import io.searchbox.core.SearchResult;
@@ -52,6 +56,9 @@ public class DishListFinder extends AbstractFinder<DishList>{
 	private List<String> fields;
 	private Location userLocation;
 	private Range range;
+	private boolean debugMode;
+	private boolean highlightInField;
+	private String language = "zh";
 	
 	private DishListFinder(Builder builder) {
 		
@@ -65,7 +72,9 @@ public class DishListFinder extends AbstractFinder<DishList>{
 		this.fields = builder.fields;
 		this.userLocation = builder.userLocation;
 		this.range = builder.range;
-		
+		this.debugMode = builder.debugMode;
+		this.highlightInField = builder.highlightInField;
+		this.language = builder.language;
 	}
 	
 	public static class Builder {
@@ -86,6 +95,10 @@ public class DishListFinder extends AbstractFinder<DishList>{
 		private List<String> fields = new ArrayList<String>();
 		private Location userLocation;
 		private Range range;
+		private boolean debugMode;
+		private boolean highlightInField;
+		private String language = "zh";
+
 		
 		public Builder(DishListSearchRequest searchRequest) {
 			if (searchRequest == null) {
@@ -115,6 +128,7 @@ public class DishListFinder extends AbstractFinder<DishList>{
 			
 			this.userLocation = searchRequest.getUserLocation();
 			this.range = searchRequest.getRange();
+			this.highlightInField = searchRequest.isHighlightInField();
 		}
 		
 		private void normalizeFields(List<String> fields) {
@@ -134,6 +148,24 @@ public class DishListFinder extends AbstractFinder<DishList>{
 				}
 			}
 			
+		}
+		
+		public boolean isDebugMode() {
+			return debugMode;
+		}
+
+		public Builder setDebugMode(boolean debugMode) {
+			this.debugMode = debugMode;
+			return this;
+		}
+
+		public String getLanguage() {
+			return language;
+		}
+
+		public Builder setLanguage(String language) {
+			this.language = language;
+			return this;
 		}
 
 		public DishListFinder build() {
@@ -175,7 +207,66 @@ public class DishListFinder extends AbstractFinder<DishList>{
 			}
 			JsonObject source = hit.get("_source").getAsJsonObject();
 			DishList dishList = new DishListConverter(fields).convert(source);
+			if (highlightInField && hit.get("highlight") != null && hit.get("highlight").getAsJsonObject() != null) {
+				JsonObject highlightResult = hit.get("highlight").getAsJsonObject();
+				String highlightedName = null;
+				if (highlightResult.get("name") != null) {
+					JsonArray nameHighlight = highlightResult.get("name").getAsJsonArray();
+					if (nameHighlight != null) {
+						JsonElement element = nameHighlight.get(0);
+						if (element != null) {
+							highlightedName = element.getAsString();
+						} 
+					}
+				}
+				if (highlightedName != null) {
+					dishList.setName(highlightedName);
+				}
+				if (highlightResult.get("dishes") != null) {
+					JsonArray dishHighlight = highlightResult.get("dishes").getAsJsonArray();
+					if (dishHighlight != null) {
+						List<String> dishes = new ArrayList<String>();
+						for (int j = 0; j < dishHighlight.size(); j++) {
+							JsonElement element = dishHighlight.get(j);
+							if (element != null) {
+								String dish = element.getAsString();
+								if ("zh".equals(this.language)) {
+									if (StringUtil.containsHanScript(dish)) {
+										dishes.add(dish);
+									}
+								} else if ("en".equals(this.language)) {
+									if (!StringUtil.containsHanScript(dish)) {
+										dishes.add(dish);
+									}
+								}				
+							}
+						}
+						if (dishes.size() > 0) {
+							Collections.sort(dishes, new HighlightImportanceComparator());
+							List<String> currentDishes = dishList.getDishes();
+							Iterator<String> iterator = currentDishes.iterator();
+							while (iterator.hasNext()) {
+								String dish = iterator.next();
+								for (int m = 0; m < this.keyword.length(); m++) {
+									if (dish.indexOf(this.keyword.charAt(m)) > 0) {
+										iterator.remove();
+										break;
+									}
+								}
+							}
+							currentDishes.addAll(0, dishes);
+						}
+					}
+				}
+			}
 			results.add(dishList);
+			if (debugMode) {
+				double score = 0;
+				if (hit.get("_score") != null) {
+					score = hit.get("_score").getAsDouble();
+				}
+				dishList.addDiagInfo("score", String.valueOf(score));
+			}
 		}
 		return results;
 	}
@@ -233,6 +324,9 @@ public class DishListFinder extends AbstractFinder<DishList>{
 		searchSourceBuilder.from(offset).size(limit).minScore(relevanceScoreThreshold);
 		if (!returnAllFields) {
 			searchSourceBuilder.fields(fields);
+		}
+		if (highlightInField) {
+			searchSourceBuilder.highlight(new HighlightBuilder().preTags("<b>").postTags("</b>").field("name").field("dishes"));
 		}
 		Search search = new Search.Builder(searchSourceBuilder.toString())
 		                                .addIndex(Indices.FOOD)

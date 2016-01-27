@@ -23,6 +23,8 @@ public class DishListSearchRequest {
 	@JsonProperty("user_location")
 	private Location userLocation;
 	private Range range;
+	private boolean highlightInField;
+	
 	
 	public String getKeyword() {
 		return keyword;
@@ -77,6 +79,13 @@ public class DishListSearchRequest {
 	}
 	public void setRange(Range range) {
 		this.range = range;
+	}
+	
+	public boolean isHighlightInField() {
+		return highlightInField;
+	}
+	public void setHighlightInField(boolean highlightInField) {
+		this.highlightInField = highlightInField;
 	}
 
 }
