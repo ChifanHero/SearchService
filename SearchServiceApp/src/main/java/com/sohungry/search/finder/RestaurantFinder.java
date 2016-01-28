@@ -7,7 +7,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.elasticsearch.index.query.BaseQueryBuilder;
-import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.DisMaxQueryBuilder;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.FilterBuilders;
