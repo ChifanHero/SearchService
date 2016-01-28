@@ -23,6 +23,8 @@ public class DishListSearchRequest {
 	@JsonProperty("user_location")
 	private Location userLocation;
 	private Range range;
+	
+	@JsonProperty("highlight_in_field")
 	private boolean highlightInField;
 	
 	

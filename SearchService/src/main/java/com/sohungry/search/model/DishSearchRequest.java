@@ -29,6 +29,8 @@ public class DishSearchRequest {
 	@JsonProperty("menu_id")
 	private String menuId;
 	private Range range;
+	
+	@JsonProperty("highlight_in_field")
 	private boolean highlightInField;
 	
 	public String getKeyword() {
