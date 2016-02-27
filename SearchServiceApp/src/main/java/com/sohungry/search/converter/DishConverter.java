@@ -107,6 +107,7 @@ public class DishConverter implements Converter<Dish>{
 			if (source.get("from_restaurant") != null && !source.get("from_restaurant").isJsonNull()) {
 				JsonObject restaurant = source.get("from_restaurant").getAsJsonObject();
 				List<String> restaurantFields = new ArrayList<String>();
+				restaurantFields.add(RestaurantField.id.name());
 				restaurantFields.add(RestaurantField.name.name());
 				restaurantFields.add(RestaurantField.english_name.name());
 				restaurantFields.add(RestaurantField.distance.name());
