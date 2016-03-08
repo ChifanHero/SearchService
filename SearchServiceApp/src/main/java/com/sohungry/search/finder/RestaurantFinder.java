@@ -376,7 +376,7 @@ public class RestaurantFinder extends AbstractFinder<Restaurant> {
 			if (this.range.getDistance() != null && this.range.getDistance().getUnit() != null && this.range.getDistance().getUnit() == DistanceUnit.km) {
 				unit = org.elasticsearch.common.unit.DistanceUnit.KILOMETERS;
 			} 
-			FilterBuilder geoDistanceFilter = FilterBuilders.geoDistanceFilter("coordinates").distance(range.getDistance().getValue(), unit);
+			FilterBuilder geoDistanceFilter = FilterBuilders.geoDistanceFilter("coordinates").distance(range.getDistance().getValue(), unit).lat(this.range.getCenter().getLat()).lon(this.range.getCenter().getLon());
 			FilteredQueryBuilder filterreQuery = QueryBuilders.filteredQuery(query, geoDistanceFilter);
 			searchSourceBuilder.query(filterreQuery);
 		} else {
