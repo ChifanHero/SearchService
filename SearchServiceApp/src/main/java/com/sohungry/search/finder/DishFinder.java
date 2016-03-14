@@ -367,12 +367,21 @@ public class DishFinder extends AbstractFinder<Dish> {
 	}
 
 	private FilterBuilder createRangeFilter() {
-		if (this.range != null && this.range.getDistance() != null && this.range.getCenter() != null) {
+		if ((this.range != null && this.range.getDistance() != null && this.range.getCenter() != null) || this.userLocation != null ) {
 			org.elasticsearch.common.unit.DistanceUnit unit = org.elasticsearch.common.unit.DistanceUnit.MILES;
-			if (this.range.getDistance() != null && this.range.getDistance().getUnit() != null && this.range.getDistance().getUnit() == DistanceUnit.km) {
-				unit = org.elasticsearch.common.unit.DistanceUnit.KILOMETERS;
-			} 
-			FilterBuilder geoDistanceFilter = FilterBuilders.geoDistanceFilter("from_restaurant.coordinates").distance(range.getDistance().getValue(), unit);
+			Location center = null;
+			double distance = 50;
+			if (this.range != null && this.range.getDistance() != null && this.range.getCenter() != null) {
+				if (this.range.getDistance() != null && this.range.getDistance().getUnit() != null && this.range.getDistance().getUnit() == DistanceUnit.km) {
+					unit = org.elasticsearch.common.unit.DistanceUnit.KILOMETERS;
+				}
+				center = this.range.getCenter();
+				distance = range.getDistance().getValue();
+			} else {
+				center = this.userLocation;
+			}
+			 
+			FilterBuilder geoDistanceFilter = FilterBuilders.geoDistanceFilter("from_restaurant.coordinates").distance(distance, unit).lat(center.getLat()).lon(center.getLon());
 			FilterBuilder nestedRestFilter = FilterBuilders.nestedFilter("from_restaurant", geoDistanceFilter);
 			return nestedRestFilter;
 		}

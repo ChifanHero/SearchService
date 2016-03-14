@@ -87,7 +87,7 @@ public class RestaurantFinder extends AbstractFinder<Restaurant> {
 		private static final int DEFAULT_LIMIT = 20;
 		private static final SortBy DEFAULT_SORTBY = SortBy.relevance;
 		private static final SortOrder DEFAULT_SORT_ORDER = SortOrder.descend;
-		private static final float DEFAULT_REL_THRESH = (float) 0.6;
+		private static final float DEFAULT_REL_THRESH = (float) 0.2;
 		private static final DistanceUnit DEFAULT_DISTANCE_UNIT = DistanceUnit.mi;
 		
 		private String keyword;
@@ -204,6 +204,25 @@ public class RestaurantFinder extends AbstractFinder<Restaurant> {
 		if (hits == null || !hits.isJsonArray() || hits.size() <= 0) return Collections.emptyList();
 		List<Restaurant> results = new ArrayList<Restaurant>();
 //		boolean hasProminantResult = false;
+		double maxScore = 0.0;
+		for (int i = 0; i < hits.size(); i++) {
+			JsonObject hit = hits.get(i).getAsJsonObject();
+			if (hit == null || !hit.isJsonObject()) {
+				continue;
+			}
+			
+			if (hit.get("_source") == null) {
+				continue;
+			}
+			double score = 0;
+			if (hit.get("_score") != null) {
+				score = hit.get("_score").getAsDouble();
+			}
+			if (score > maxScore) {
+				maxScore = score;
+			}
+		}
+		double scoreThreshold = maxScore / 3;
 		for (int i = 0; i < hits.size(); i++) {
 			JsonObject hit = hits.get(i).getAsJsonObject();
 			if (hit == null || !hit.isJsonObject()) {
@@ -223,6 +242,9 @@ public class RestaurantFinder extends AbstractFinder<Restaurant> {
 //			if (hasProminantResult && score < PROMINENT_SCORE) {
 //				continue;
 //			}
+			if (score < scoreThreshold) {
+				continue;
+			}
 			JsonObject source = hit.get("_source").getAsJsonObject();
 			Restaurant restaurant = new RestaurantConverter(this.fields, this.userLocation, this.distanceUnit, this.language).convert(source);	
 			if (highlightInField && hit.get("highlight") != null && hit.get("highlight").getAsJsonObject() != null) {
@@ -371,12 +393,21 @@ public class RestaurantFinder extends AbstractFinder<Restaurant> {
 			}
 		}
 		
-		if (this.range != null && this.range.getCenter() != null && this.range.getDistance() != null) {
+		if ((this.range != null && this.range.getDistance() != null && this.range.getCenter() != null) || this.userLocation != null ) {			
 			org.elasticsearch.common.unit.DistanceUnit unit = org.elasticsearch.common.unit.DistanceUnit.MILES;
-			if (this.range.getDistance() != null && this.range.getDistance().getUnit() != null && this.range.getDistance().getUnit() == DistanceUnit.km) {
-				unit = org.elasticsearch.common.unit.DistanceUnit.KILOMETERS;
-			} 
-			FilterBuilder geoDistanceFilter = FilterBuilders.geoDistanceFilter("coordinates").distance(range.getDistance().getValue(), unit).lat(this.range.getCenter().getLat()).lon(this.range.getCenter().getLon());
+			Location center = null;
+			double distance = 50;
+			if (this.range != null && this.range.getDistance() != null && this.range.getCenter() != null) {
+				if (this.range.getDistance() != null && this.range.getDistance().getUnit() != null && this.range.getDistance().getUnit() == DistanceUnit.km) {
+					unit = org.elasticsearch.common.unit.DistanceUnit.KILOMETERS;
+				}
+				center = this.range.getCenter();
+				distance = range.getDistance().getValue();
+			} else {
+				center = this.userLocation;
+			}
+			
+			FilterBuilder geoDistanceFilter = FilterBuilders.geoDistanceFilter("coordinates").distance(distance, unit).lat(center.getLat()).lon(center.getLon());
 			FilteredQueryBuilder filterreQuery = QueryBuilders.filteredQuery(query, geoDistanceFilter);
 			searchSourceBuilder.query(filterreQuery);
 		} else {

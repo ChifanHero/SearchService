@@ -9,7 +9,11 @@ public enum DishListField {
 	
 	id,
 	name,
-	member_count;
+	member_count,
+	like_count,
+	favorite_count,
+	picture
+	;
 	
 	public static DishListField fromString(String text) {
 		if (text != null) {

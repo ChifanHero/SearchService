@@ -21,6 +21,14 @@ public class DishList {
 	
 	private List<String> dishes;
 	
+	@JsonProperty("farovite_count")
+	private Long favoriteCount;
+	
+	@JsonProperty("like_count")
+	private Long likeCount;
+
+	private Picture picture;
+	
 	private Map<String, List<String>> diagInfo;
 
 	public String getId() {
@@ -53,6 +61,30 @@ public class DishList {
 
 	public void setDishes(List<String> dishes) {
 		this.dishes = dishes;
+	}
+
+	public Long getFavoriteCount() {
+		return favoriteCount;
+	}
+
+	public void setFavoriteCount(Long favoriteCount) {
+		this.favoriteCount = favoriteCount;
+	}
+
+	public Long getLikeCount() {
+		return likeCount;
+	}
+
+	public void setLikeCount(Long likeCount) {
+		this.likeCount = likeCount;
+	}
+
+	public Picture getPicture() {
+		return picture;
+	}
+
+	public void setPicture(Picture picture) {
+		this.picture = picture;
 	}
 
 	public Map<String, List<String>> getDiagInfo() {
