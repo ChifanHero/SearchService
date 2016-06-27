@@ -1,4 +1,4 @@
-package com.sohungry.search.converter;
+package com.sohungry.search.v1.converter;
 
 import com.google.gson.JsonObject;
 

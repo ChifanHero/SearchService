@@ -133,6 +133,16 @@
 			<artifactId>logback-core</artifactId>
 			<type>jar</type>
 		</dependency>
+		<dependency>
+			<groupId>github.familysyan</groupId>
+			<artifactId>concurrent-task</artifactId>
+			<version>1.0.0-RELEASE</version>
+		</dependency>
+		<dependency>
+			<groupId>se.walkercrou</groupId>
+			<artifactId>google-places-api-java</artifactId>
+			<version>2.1.2</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>

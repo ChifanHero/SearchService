@@ -1,4 +1,4 @@
-package com.sohungry.search.finder;
+package com.sohungry.search.v1.finder;
 
 import java.util.List;
 

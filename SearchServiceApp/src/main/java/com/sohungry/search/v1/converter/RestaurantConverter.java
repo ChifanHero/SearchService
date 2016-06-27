@@ -1,4 +1,4 @@
-package com.sohungry.search.converter;
+package com.sohungry.search.v1.converter;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;

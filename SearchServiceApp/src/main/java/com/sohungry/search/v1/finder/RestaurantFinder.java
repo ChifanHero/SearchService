@@ -1,4 +1,4 @@
-package com.sohungry.search.finder;
+package com.sohungry.search.v1.finder;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -7,7 +7,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.elasticsearch.index.query.BaseQueryBuilder;
-import org.elasticsearch.index.query.BoolFilterBuilder;
 import org.elasticsearch.index.query.DisMaxQueryBuilder;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.FilterBuilders;
@@ -24,27 +23,28 @@ import org.slf4j.LoggerFactory;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.sohungry.search.converter.DishListConverter;
 import com.sohungry.search.elastic.factory.ElasticsearchRestClientFactory;
 import com.sohungry.search.meta.Indices;
 import com.sohungry.search.meta.Types;
-import com.sohungry.search.model.DishList;
-import com.sohungry.search.model.DishListField;
-import com.sohungry.search.model.DishListSearchRequest;
 import com.sohungry.search.model.DistanceUnit;
 import com.sohungry.search.model.Location;
 import com.sohungry.search.model.Range;
+import com.sohungry.search.model.Restaurant;
+import com.sohungry.search.model.RestaurantField;
+import com.sohungry.search.model.RestaurantSearchRequest;
 import com.sohungry.search.model.SortBy;
 import com.sohungry.search.model.SortOrder;
 import com.sohungry.search.util.HighlightImportanceComparator;
 import com.sohungry.search.util.StringUtil;
+import com.sohungry.search.v1.converter.RestaurantConverter;
 
 import io.searchbox.core.Search;
 import io.searchbox.core.SearchResult;
 
-public class DishListFinder extends AbstractFinder<DishList>{
+public class RestaurantFinder extends AbstractFinder<Restaurant> {
 	
-	private final static Logger LOGGER = LoggerFactory.getLogger(DishFinder.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(RestaurantFinder.class);
+//	private final static double PROMINENT_SCORE = 3.0;
 	
 	private String keyword;
 	private Integer offset;
@@ -55,13 +55,16 @@ public class DishListFinder extends AbstractFinder<DishList>{
 	private boolean returnAllFields;
 	private List<String> fields;
 	private Location userLocation;
+	private DistanceUnit distanceUnit;
 	private Range range;
 	private boolean debugMode;
 	private boolean highlightInField;
-	private String language = "zh";
+	private String language;
 	
-	private DishListFinder(Builder builder) {
-		
+	/**
+	 * Use new RestaurantFinder.Builder(searchRequest).build() to construct this class
+	 */
+	private RestaurantFinder(Builder builder) {
 		this.keyword = builder.keyword;
 		this.offset = builder.offset;
 		this.limit = builder.limit;
@@ -71,6 +74,7 @@ public class DishListFinder extends AbstractFinder<DishList>{
 		this.returnAllFields = builder.returnAllFields;
 		this.fields = builder.fields;
 		this.userLocation = builder.userLocation;
+		this.distanceUnit = builder.distanceUnit;
 		this.range = builder.range;
 		this.debugMode = builder.debugMode;
 		this.highlightInField = builder.highlightInField;
@@ -81,26 +85,27 @@ public class DishListFinder extends AbstractFinder<DishList>{
 		
 		private static final int DEFAULT_OFFSET = 0;
 		private static final int DEFAULT_LIMIT = 20;
+		private static final SortBy DEFAULT_SORTBY = SortBy.relevance;
 		private static final SortOrder DEFAULT_SORT_ORDER = SortOrder.descend;
-		private static final SortBy DEFAULT_SORT_BY = SortBy.relevance;
-		private static final float DEFAULT_REL_THRESH = (float) 1.0;
+		private static final float DEFAULT_REL_THRESH = (float) 0.2;
+		private static final DistanceUnit DEFAULT_DISTANCE_UNIT = DistanceUnit.mi;
 		
 		private String keyword;
 		private int offset = DEFAULT_OFFSET;
 		private int limit = DEFAULT_LIMIT;
-		private SortBy sortBy = DEFAULT_SORT_BY;
+		private SortBy sortBy = DEFAULT_SORTBY;
 		private SortOrder sortOrder = DEFAULT_SORT_ORDER;
 		private float relevanceScoreThreshold = DEFAULT_REL_THRESH;
 		private boolean returnAllFields = true;
 		private List<String> fields = new ArrayList<String>();
 		private Location userLocation;
+		private DistanceUnit distanceUnit = DEFAULT_DISTANCE_UNIT;
 		private Range range;
 		private boolean debugMode;
 		private boolean highlightInField;
 		private String language = "zh";
-
 		
-		public Builder(DishListSearchRequest searchRequest) {
+		public Builder(RestaurantSearchRequest searchRequest) {
 			if (searchRequest == null) {
 				throw new RuntimeException("searchRequest cannot be null");
 			}
@@ -125,16 +130,22 @@ public class DishListFinder extends AbstractFinder<DishList>{
 				this.fields = searchRequest.getOutput().getFields();
 			} 
 			normalizeFields(fields);
-			
 			this.userLocation = searchRequest.getUserLocation();
+			if (searchRequest.getOutput() != null && searchRequest.getOutput().getParams() != null && searchRequest.getOutput().getParams().getDistanceUnit() != null) {
+				this.distanceUnit = searchRequest.getOutput().getParams().getDistanceUnit();
+			}
 			this.range = searchRequest.getRange();
 			this.highlightInField = searchRequest.isHighlightInField();
+		}
+		
+		public RestaurantFinder build() {
+			return new RestaurantFinder(this);
 		}
 		
 		private void normalizeFields(List<String> fields) {
 			if (returnAllFields) {
 				fields.clear();
-				for (DishListField field : DishListField.values()) {
+				for (RestaurantField field : RestaurantField.values()) {
 					fields.add(field.name());
 				}
 			} else {
@@ -142,14 +153,14 @@ public class DishListFinder extends AbstractFinder<DishList>{
 				Iterator<String> iterator = fields.iterator();
 				while (iterator.hasNext()) {
 					String field = iterator.next();
-					if (DishListField.fromString(field) == null) {
+					if (RestaurantField.fromString(field) == null) {
 						iterator.remove();
 					}
 				}
 			}
 			
 		}
-		
+
 		public boolean isDebugMode() {
 			return debugMode;
 		}
@@ -167,22 +178,18 @@ public class DishListFinder extends AbstractFinder<DishList>{
 			this.language = language;
 			return this;
 		}
-
-		public DishListFinder build() {
-			return new DishListFinder(this);
-		}
 		
 	}
 
 	@Override
-	public List<DishList> find() {
+	public List<Restaurant> find() {
 		Search searchQuery = buildSearchQuery();
 		try {
 			SearchResult result = ElasticsearchRestClientFactory.getRestClient().execute(searchQuery);
 			if (result != null && result.getJsonObject() != null && result.getJsonObject().getAsJsonObject("hits") != null) {
 				JsonArray hits = result.getJsonObject().getAsJsonObject("hits").getAsJsonArray("hits");
 				if (hits != null && hits.size() > 0) {
-					List<DishList> results = convert(hits);
+					List<Restaurant> results = convert(hits);
 					return results;
 				}
 			}	
@@ -193,9 +200,11 @@ public class DishListFinder extends AbstractFinder<DishList>{
 	}
 	
 	@Override
-	protected List<DishList> convert(JsonArray hits) {
+	protected List<Restaurant> convert(JsonArray hits) {
 		if (hits == null || !hits.isJsonArray() || hits.size() <= 0) return Collections.emptyList();
-		List<DishList> results = new ArrayList<DishList>();
+		List<Restaurant> results = new ArrayList<Restaurant>();
+//		boolean hasProminantResult = false;
+		double maxScore = 0.0;
 		for (int i = 0; i < hits.size(); i++) {
 			JsonObject hit = hits.get(i).getAsJsonObject();
 			if (hit == null || !hit.isJsonObject()) {
@@ -205,23 +214,65 @@ public class DishListFinder extends AbstractFinder<DishList>{
 			if (hit.get("_source") == null) {
 				continue;
 			}
+			double score = 0;
+			if (hit.get("_score") != null) {
+				score = hit.get("_score").getAsDouble();
+			}
+			if (score > maxScore) {
+				maxScore = score;
+			}
+		}
+		double scoreThreshold = maxScore / 3;
+		for (int i = 0; i < hits.size(); i++) {
+			JsonObject hit = hits.get(i).getAsJsonObject();
+			if (hit == null || !hit.isJsonObject()) {
+				continue;
+			}
+			
+			if (hit.get("_source") == null) {
+				continue;
+			}
+			double score = 0;
+			if (hit.get("_score") != null) {
+				score = hit.get("_score").getAsDouble();
+			}
+//			if (score >= PROMINENT_SCORE) {
+//				hasProminantResult = true;
+//			}
+//			if (hasProminantResult && score < PROMINENT_SCORE) {
+//				continue;
+//			}
+			if (score < scoreThreshold) {
+				continue;
+			}
 			JsonObject source = hit.get("_source").getAsJsonObject();
-			DishList dishList = new DishListConverter(fields).convert(source);
+			Restaurant restaurant = new RestaurantConverter(this.fields, this.userLocation, this.distanceUnit, this.language).convert(source);	
 			if (highlightInField && hit.get("highlight") != null && hit.get("highlight").getAsJsonObject() != null) {
 				JsonObject highlightResult = hit.get("highlight").getAsJsonObject();
 				String highlightedName = null;
-				if (highlightResult.get("name") != null) {
-					JsonArray nameHighlight = highlightResult.get("name").getAsJsonArray();
+				String highlightedEnglishName = null;
+				if (highlightResult.get(RestaurantField.name.name()) != null) {
+					JsonArray nameHighlight = highlightResult.get(RestaurantField.name.name()).getAsJsonArray();
 					if (nameHighlight != null) {
 						JsonElement element = nameHighlight.get(0);
 						if (element != null) {
 							highlightedName = element.getAsString();
 						} 
 					}
-				}
-				if (highlightedName != null) {
-					dishList.setName(highlightedName);
-				}
+				} 
+				if (highlightResult.get(RestaurantField.english_name.name()) != null) {
+					JsonArray englishNameHighlight = highlightResult.get(RestaurantField.english_name.name()).getAsJsonArray();
+					if (englishNameHighlight != null) {
+						JsonArray nameHighlight = highlightResult.get(RestaurantField.english_name.name()).getAsJsonArray();
+						if (nameHighlight != null) {
+							
+							JsonElement element = nameHighlight.get(0);
+							if (element != null) {
+								highlightedEnglishName = element.getAsString();
+							}
+						}
+					}
+				} 
 				if (highlightResult.get("dishes") != null) {
 					JsonArray dishHighlight = highlightResult.get("dishes").getAsJsonArray();
 					if (dishHighlight != null) {
@@ -243,7 +294,7 @@ public class DishListFinder extends AbstractFinder<DishList>{
 						}
 						if (dishes.size() > 0) {
 							Collections.sort(dishes, new HighlightImportanceComparator());
-							List<String> currentDishes = dishList.getDishes();
+							List<String> currentDishes = restaurant.getDishes();
 							Iterator<String> iterator = currentDishes.iterator();
 							while (iterator.hasNext()) {
 								String dish = iterator.next();
@@ -257,38 +308,74 @@ public class DishListFinder extends AbstractFinder<DishList>{
 							currentDishes.addAll(0, dishes);
 						}
 					}
+				} 
+				if (highlightResult.get("address") != null) {
+					JsonArray addressHighlight = highlightResult.get("address").getAsJsonArray();
+					if (addressHighlight != null) {
+						JsonArray nameHighlight = highlightResult.get("address").getAsJsonArray();
+						if (nameHighlight != null) {
+							String highlightedAddress;
+							JsonElement element = nameHighlight.get(0);
+							if (element != null) {
+								highlightedAddress = element.getAsString();
+								restaurant.setAddress(highlightedAddress);
+							}
+						}
+					}
+				}
+				if ("zh".equals(this.language)) {
+					String name = restaurant.getName();
+					if (highlightedName != null) {
+						name = highlightedName;
+					}
+					if (highlightedEnglishName != null) {
+						name = name + " (" + highlightedEnglishName + ")";
+					}
+					restaurant.setName(name);
+				} else if ("en".equals(this.language)) {
+					String name = restaurant.getName();
+					if (highlightedEnglishName != null) {
+						name = highlightedEnglishName;
+					}
+					if (highlightedName != null) {
+						name = name + " (" + highlightedName + ")";
+					}
+					restaurant.setName(name);
 				}
 			}
-			results.add(dishList);
 			if (debugMode) {
-				double score = 0;
-				if (hit.get("_score") != null) {
-					score = hit.get("_score").getAsDouble();
-				}
-				dishList.addDiagInfo("score", String.valueOf(score));
+				restaurant.addDiagInfo("score", String.valueOf(score));
 			}
+			results.add(restaurant);
 		}
 		return results;
 	}
 
+
 	@Override
 	protected Search buildSearchQuery() {
 		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-		BaseQueryBuilder mainQuery;
+		BaseQueryBuilder query;
 		if (keyword != null && !keyword.isEmpty()) {
-			mainQuery = QueryBuilders.disMaxQuery();
-			QueryBuilder nameQuery = QueryBuilders.matchQuery("name", keyword);
-			QueryBuilder restaurantsQuery = QueryBuilders.matchQuery("restaurants", keyword);
-			QueryBuilder dishesQuery = QueryBuilders.matchQuery("dishes", keyword);
-			((DisMaxQueryBuilder) mainQuery).add(nameQuery);
-			((DisMaxQueryBuilder) mainQuery).add(restaurantsQuery);
-			((DisMaxQueryBuilder) mainQuery).add(dishesQuery);
+			
+//			query = QueryBuilders.boolQuery();
+			query = QueryBuilders.disMaxQuery();
+			QueryBuilder nameQuery = QueryBuilders.matchQuery("name", keyword).boost(3);
+			QueryBuilder englishNameQuery = QueryBuilders.matchQuery("english_name", keyword).boost(2);
+			QueryBuilder dishNameQuery = QueryBuilders.matchQuery("dishes", keyword);
+//			QueryBuilder dishNameQuery = QueryBuilders.matchPhraseQuery("dishes", keyword);
+			QueryBuilder addressQuery = QueryBuilders.matchQuery("address", keyword);
+			((DisMaxQueryBuilder) query).add(nameQuery);
+			((DisMaxQueryBuilder) query).add(englishNameQuery);
+			((DisMaxQueryBuilder) query).add(dishNameQuery);
+			((DisMaxQueryBuilder) query).add(addressQuery);
+//			((BoolQueryBuilder) query).should(dismaxQuery);
+//			((BoolQueryBuilder) query).should(addressQuery);
 		} else {
-			mainQuery = QueryBuilders.matchAllQuery();
+			query = QueryBuilders.matchAllQuery();
 		}
 		
-		
-		
+
 		SortBuilder sort = null;
 		if (sortBy == SortBy.distance && userLocation != null) {
 			sort = SortBuilders.geoDistanceSort("coordinates").point(userLocation.getLat(), userLocation.getLon());
@@ -306,37 +393,7 @@ public class DishListFinder extends AbstractFinder<DishList>{
 			}
 		}
 		
-		FilterBuilder distanceFilter = createRangeFilter();
-		if (distanceFilter != null) {
-			BoolFilterBuilder boolFilter = FilterBuilders.boolFilter();
-			if (distanceFilter != null) {
-				boolFilter.must(distanceFilter);
-			}
-			FilteredQueryBuilder filteredQuery = QueryBuilders.filteredQuery(mainQuery, boolFilter);
-			searchSourceBuilder.query(filteredQuery);
-			
-		} else {
-			searchSourceBuilder.query(mainQuery);
-		}
-		if (sort != null) {
-			searchSourceBuilder.sort(sort);
-		}
-		searchSourceBuilder.from(offset).size(limit).minScore(relevanceScoreThreshold);
-		if (!returnAllFields) {
-			searchSourceBuilder.fields(fields);
-		}
-		if (highlightInField) {
-			searchSourceBuilder.highlight(new HighlightBuilder().preTags("<b>").postTags("</b>").field("name").field("dishes"));
-		}
-		Search search = new Search.Builder(searchSourceBuilder.toString())
-		                                .addIndex(Indices.FOOD)
-		                                .addType(Types.DISHLIST)
-		                                .build();
-		return search;
-	}
-
-	private FilterBuilder createRangeFilter() {
-		if ((this.range != null && this.range.getDistance() != null && this.range.getCenter() != null) || this.userLocation != null ) {
+		if ((this.range != null && this.range.getDistance() != null && this.range.getCenter() != null) || this.userLocation != null ) {			
 			org.elasticsearch.common.unit.DistanceUnit unit = org.elasticsearch.common.unit.DistanceUnit.MILES;
 			Location center = null;
 			double distance = 50;
@@ -349,12 +406,41 @@ public class DishListFinder extends AbstractFinder<DishList>{
 			} else {
 				center = this.userLocation;
 			}
-			 
-			FilterBuilder geoDistanceFilter = FilterBuilders.geoDistanceFilter("center_location").distance(distance, unit).lat(center.getLat()).lon(center.getLon());
-			return geoDistanceFilter;
+			
+			FilterBuilder geoDistanceFilter = FilterBuilders.geoDistanceFilter("coordinates").distance(distance, unit).lat(center.getLat()).lon(center.getLon());
+			FilteredQueryBuilder filterreQuery = QueryBuilders.filteredQuery(query, geoDistanceFilter);
+			searchSourceBuilder.query(filterreQuery);
+		} else {
+			searchSourceBuilder.query(query);
 		}
-		return null;
+		if (sort != null) {
+			searchSourceBuilder.sort(sort);
+		}
+		searchSourceBuilder.from(offset).size(limit).minScore(relevanceScoreThreshold);
+		
+		if (!returnAllFields) {
+			searchSourceBuilder.fields(fields);
+		} 
+		if (highlightInField) {
+			searchSourceBuilder.highlight(new HighlightBuilder().preTags("<b>").postTags("</b>").field(RestaurantField.name.name()).field("dishes").field("address").field(RestaurantField.english_name.name()));
+		}
+				
+		Search search = new Search.Builder(searchSourceBuilder.toString())
+		                                // multiple index or types can be added.
+		                                .addIndex(Indices.FOOD)
+		                                .addType(Types.RESTAURANT)
+		                                .build();
+		return search;
 	}
-
+	
+//	private QueryBuilder getCompositeQuery(String fieldName, String keyword, float boost) {
+//		if (fieldName == null || keyword == null) return null;
+//		QueryBuilder matchQuery = QueryBuilders.matchQuery(fieldName, keyword);
+//		QueryBuilder phraseQuery = QueryBuilders.matchPhraseQuery(fieldName, keyword).boost(boost).slop(50);
+//		return QueryBuilders.boolQuery().should(matchQuery).should(phraseQuery).minimumNumberShouldMatch(1);
+//	}
+//	
+	
 
 }
+

@@ -17,8 +17,8 @@ import com.sohungry.search.model.RestaurantSearchResponse;
 import com.sohungry.search.v1.finder.RestaurantFinder;
 
 @RestController
-@RequestMapping(value = "/search")
-public class RestaurantSearchResource {
+@RequestMapping(value = "/search/v2")
+public class RestaurantSearchV2Resource {
 	
 	
 	@RequestMapping(value = "/restaurants", method = RequestMethod.POST, produces = {"application/json"})

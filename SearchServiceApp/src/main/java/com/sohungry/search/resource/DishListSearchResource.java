@@ -11,10 +11,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.sohungry.search.finder.DishListFinder;
 import com.sohungry.search.model.DishList;
 import com.sohungry.search.model.DishListSearchRequest;
 import com.sohungry.search.model.DishListSearchResponse;
+import com.sohungry.search.v1.finder.DishListFinder;
 
 @RestController
 @RequestMapping(value = "/search")

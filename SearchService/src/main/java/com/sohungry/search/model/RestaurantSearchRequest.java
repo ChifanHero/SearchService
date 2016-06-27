@@ -27,6 +27,8 @@ public class RestaurantSearchRequest {
 	@JsonProperty("highlight_in_field")
 	private boolean highlightInField;
 	
+	private Source source;
+	
 	public String getKeyword() {
 		return keyword;
 	}
@@ -86,6 +88,12 @@ public class RestaurantSearchRequest {
 	}
 	public void setHighlightInField(boolean highlight) {
 		this.highlightInField = highlight;
+	}
+	public Source getSource() {
+		return source;
+	}
+	public void setSource(Source source) {
+		this.source = source;
 	}
 
 }
