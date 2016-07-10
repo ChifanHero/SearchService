@@ -3,7 +3,6 @@ package com.sohungry.search.internal.representation;
 import java.util.List;
 import java.util.Map;
 
-import com.sohungry.search.model.Location;
 import com.sohungry.search.model.Picture;
 import com.sohungry.search.model.Source;
 

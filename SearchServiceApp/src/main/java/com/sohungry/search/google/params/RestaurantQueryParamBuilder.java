@@ -1,6 +1,6 @@
 package com.sohungry.search.google.params;
 
-import com.sohungry.search.domain.context.ImmutableRestaurantRequestContext;
+import com.sohungry.search.domain.context.RestaurantRequestContext;
 import com.sohungry.search.model.Location;
 
 import se.walkercrou.places.Param;
@@ -10,15 +10,20 @@ public class RestaurantQueryParamBuilder implements ParamBuilder{
 	private String keyword;
 	private int limit = 20;
 	private Location center;
-	private String type;
+	private String type = "restaurant";
 	private String language;
 	
 	
-	public RestaurantQueryParamBuilder(ImmutableRestaurantRequestContext requestContext) {
+	public RestaurantQueryParamBuilder(RestaurantRequestContext requestContext) {
 		if (requestContext != null) {
 			keyword = requestContext.getKeyword();
 			limit = Math.min(20, requestContext.getLimit());
 		}
+		if (requestContext.getRange() != null) {
+			center = requestContext.getRange().getCenter();
+		}
+		language = requestContext.getAppContext().getLanguage();
+		
 	}
 
 	@Override
@@ -45,6 +50,7 @@ public class RestaurantQueryParamBuilder implements ParamBuilder{
 	private String getLocationValue(Location center) {
 		StringBuilder sb = new StringBuilder();
 		sb.append(center.getLat());
+		sb.append(",");
 		sb.append(center.getLon());
 		return sb.toString();
 	}

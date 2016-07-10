@@ -7,8 +7,9 @@ import com.sohungry.search.model.Location;
 import com.sohungry.search.model.Range;
 import com.sohungry.search.model.SortBy;
 import com.sohungry.search.model.SortOrder;
+import com.sohungry.search.model.Source;
 
-public final class ImmutableRestaurantRequestContext extends RequestContext{
+public final class RestaurantRequestContext extends RequestContext{
 	
 	private String keyword;
 	private Integer offset;
@@ -22,6 +23,7 @@ public final class ImmutableRestaurantRequestContext extends RequestContext{
 	private DistanceUnit distanceUnit;
 	private Range range;
 	private boolean highlightInField;
+	private Source source;
 	
 	public String getKeyword() {
 		return keyword;
@@ -94,6 +96,18 @@ public final class ImmutableRestaurantRequestContext extends RequestContext{
 	}
 	public void setHighlightInField(boolean highlightInField) {
 		this.highlightInField = highlightInField;
+	}
+	/**
+	 * @return the source
+	 */
+	public Source getSource() {
+		return source;
+	}
+	/**
+	 * @param source the source to set
+	 */
+	public void setSource(Source source) {
+		this.source = source;
 	}
 
 

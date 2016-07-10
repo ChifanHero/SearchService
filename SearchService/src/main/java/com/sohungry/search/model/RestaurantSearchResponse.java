@@ -1,7 +1,6 @@
 package com.sohungry.search.model;
 
 import java.util.List;
-import java.util.Map;
 
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
@@ -11,7 +10,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 public class RestaurantSearchResponse {
 	
 	private List<Restaurant> results;
-	private Map<String, Bucket> buckets;
+	private List<Bucket> buckets;
 	private Error error;
 
 	public List<Restaurant> getResults() {
@@ -22,11 +21,11 @@ public class RestaurantSearchResponse {
 		this.results = results;
 	}
 
-	public Map<String, Bucket> getBuckets() {
+	public List<Bucket> getBuckets() {
 		return buckets;
 	}
 
-	public void setBuckets(Map<String, Bucket> buckets) {
+	public void setBuckets(List<Bucket> buckets) {
 		this.buckets = buckets;
 	}
 

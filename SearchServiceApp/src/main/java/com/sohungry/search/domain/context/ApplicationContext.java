@@ -1,8 +1,8 @@
 package com.sohungry.search.domain.context;
 
-public final class ImmutableApplicationContext {
+public final class ApplicationContext {
 	
-	private int appVersion = 0;
+	private int appVersion = 1;
 	private boolean debugMode;
 	private String language;
 

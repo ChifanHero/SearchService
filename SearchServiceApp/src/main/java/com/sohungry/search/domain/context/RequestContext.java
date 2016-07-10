@@ -2,13 +2,13 @@ package com.sohungry.search.domain.context;
 
 public abstract class RequestContext {
 	
-	ImmutableApplicationContext appContext;
+	ApplicationContext appContext;
 
-	public ImmutableApplicationContext getAppContext() {
+	public ApplicationContext getAppContext() {
 		return appContext;
 	}
 
-	public void setAppContext(ImmutableApplicationContext appContext) {
+	public void setAppContext(ApplicationContext appContext) {
 		this.appContext = appContext;
 	}
 

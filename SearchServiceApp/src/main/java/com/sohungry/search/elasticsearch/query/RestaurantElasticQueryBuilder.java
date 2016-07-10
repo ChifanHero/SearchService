@@ -14,7 +14,7 @@ import org.elasticsearch.search.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 
-import com.sohungry.search.domain.context.ImmutableRestaurantRequestContext;
+import com.sohungry.search.domain.context.RestaurantRequestContext;
 import com.sohungry.search.meta.Indices;
 import com.sohungry.search.meta.Types;
 import com.sohungry.search.model.DistanceUnit;
@@ -40,7 +40,7 @@ public class RestaurantElasticQueryBuilder implements ElasticQueryBuilder{
 	private Range range;
 	private boolean highlightInField;
 	
-	public RestaurantElasticQueryBuilder(ImmutableRestaurantRequestContext requestContext) {
+	public RestaurantElasticQueryBuilder(RestaurantRequestContext requestContext) {
 		if (requestContext != null) {
 			this.keyword = requestContext.getKeyword();
 			this.offset = requestContext.getOffset();

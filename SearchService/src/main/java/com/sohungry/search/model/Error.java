@@ -9,6 +9,7 @@ public class Error {
 
 	private int code;
 	private String message;
+	private ErrorSeverity severity;
 	
 	public int getCode() {
 		return code;
@@ -21,5 +22,17 @@ public class Error {
 	}
 	public void setMessage(String message) {
 		this.message = message;
+	}
+	/**
+	 * @return the severity
+	 */
+	public ErrorSeverity getSeverity() {
+		return severity;
+	}
+	/**
+	 * @param severity the severity to set
+	 */
+	public void setSeverity(ErrorSeverity severity) {
+		this.severity = severity;
 	}
 }

@@ -1,4 +1,4 @@
-package com.sohungry.search.task;
+package com.sohungry.search.task.restaurant;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
