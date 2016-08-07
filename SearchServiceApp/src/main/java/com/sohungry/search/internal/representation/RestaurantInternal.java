@@ -24,6 +24,7 @@ public class RestaurantInternal {
 	private Source source;
 	private Map<String, List<String>> highlights;
 	private double score;
+	private float rating;
 	
 	public String getId() {
 		return id;
@@ -120,6 +121,12 @@ public class RestaurantInternal {
 	}
 	public void setScore(double score) {
 		this.score = score;
+	}
+	public float getRating() {
+		return rating;
+	}
+	public void setRating(float rating) {
+		this.rating = rating;
 	}
 
 }

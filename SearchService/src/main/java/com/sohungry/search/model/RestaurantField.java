@@ -19,7 +19,8 @@ public enum RestaurantField {
 	phone,
 	hours,
 	picture,
-	dishes;
+	dishes,
+	rating;
 	
 	public static RestaurantField fromString(String text) {
 		if (text != null) {

@@ -11,6 +11,8 @@ public enum SortBy {
 	
 	distance,
 	
-	relevance
+	relevance,
+	
+	rating
 
 }

@@ -51,6 +51,7 @@ public class RestaurantElasticQueryBuilder implements ElasticQueryBuilder{
 			this.returnAllFields = requestContext.isReturnAllFields();
 			this.fields = requestContext.getFields();
 			this.range = requestContext.getRange();
+			this.userLocation = requestContext.getUserLocation();
 		}
 	}
 
@@ -87,7 +88,14 @@ public class RestaurantElasticQueryBuilder implements ElasticQueryBuilder{
 				sort.order(org.elasticsearch.search.sort.SortOrder.ASC);
 			}
 		} else if (sortBy == SortBy.hotness) {
-			sort = SortBuilders.fieldSort("like_count");
+			sort = SortBuilders.fieldSort("rating_total");
+			if (sortOrder == SortOrder.descend) {
+				sort.order(org.elasticsearch.search.sort.SortOrder.DESC);
+			} else {
+				sort.order(org.elasticsearch.search.sort.SortOrder.ASC);
+			}
+		} else if (sortBy == SortBy.rating) {
+			sort = SortBuilders.fieldSort("rating");
 			if (sortOrder == SortOrder.descend) {
 				sort.order(org.elasticsearch.search.sort.SortOrder.DESC);
 			} else {

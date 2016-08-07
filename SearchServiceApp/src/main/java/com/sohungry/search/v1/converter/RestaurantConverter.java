@@ -92,11 +92,18 @@ public class RestaurantConverter implements Converter<Restaurant>{
 		}
 		
 		if (returnAll || fields.contains(RestaurantField.name.name())) {
+			String name = null;
 			if (source.get("name") != null && !source.get("name").isJsonNull()) {
 				if ("zh".equals(language)) {
-					restaurant.setName(source.get("name").getAsString());
+					name = source.get("name").getAsString();	
 				} 
 			}
+			if (name == null) {
+				if (source.get("english_name") != null && !source.get("english_name").isJsonNull()) {
+					name = source.get("english_name").getAsString();
+				}
+			}
+			restaurant.setName(name);
 		}
 		
 		if (returnAll || fields.contains(RestaurantField.neutral_count.name())) {

@@ -37,6 +37,7 @@ public class Restaurant extends Result{
 	private Picture picture;
 //	private Map<String, List<String>> highlight;
 	private List<String> dishes;
+	private float rating;
 	private Map<String, List<String>> diagInfo;
 	
 	public String getId() {
@@ -116,6 +117,12 @@ public List<String> getDishes() {
 	}
 	public void setDishes(List<String> dishes) {
 		this.dishes = dishes;
+	}
+	public float getRating() {
+		return rating;
+	}
+	public void setRating(float rating) {
+		this.rating = rating;
 	}
 	//	public Map<String, List<String>> getHighlight() {
 //		return highlight;

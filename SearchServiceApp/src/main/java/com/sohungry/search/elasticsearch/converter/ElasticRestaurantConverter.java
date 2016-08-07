@@ -51,6 +51,9 @@ public class ElasticRestaurantConverter{
 		if (source.get("like_count") != null && !source.get("like_count").isJsonNull()) {
 			restaurant.setLikeCount(source.get("like_count").getAsLong());
 		}
+		if (source.get("rating") != null && !source.get("rating").isJsonNull()) {
+			restaurant.setRating(source.get("rating").getAsFloat());
+		}
 		if (source.get("name") != null && !source.get("name").isJsonNull()) {
 			restaurant.setName(source.get("name").getAsString());
 		}

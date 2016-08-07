@@ -45,56 +45,59 @@ public class RestaurantSearchResponseBuilderTask implements Task<RestaurantSearc
 					}
 				}
 			}
-			List<Bucket> buckets = new LinkedList<Bucket>();
-			response.setBuckets(buckets);
-			boolean needSeperateBucket = false;
-			if (googleResponse != null && googleResponse.getResults() != null) {
-				Bucket googleBucket = createBucket(googleResponse.getResults());
-				if (googleBucket != null) {
-					needSeperateBucket = true;
-					googleBucket.setLabel("以下为google搜索结果");
-					buckets.add(googleBucket);
+		} else if (dependencies.size() == 1 && dependencies.get(0) instanceof RestaurantInternalSearchResponse) {
+			nativeResponse = (RestaurantInternalSearchResponse)dependencies.get(0);
+		}
+		List<Bucket> buckets = new LinkedList<Bucket>();
+		response.setBuckets(buckets);
+		boolean needSeperateBucket = false;
+		if (googleResponse != null && googleResponse.getResults() != null) {
+			Bucket googleBucket = createBucket(googleResponse.getResults());
+			if (googleBucket != null) {
+				needSeperateBucket = true;
+				googleBucket.setLabel("以下为google搜索结果");
+				buckets.add(googleBucket);
+				googleBucket.setSource(Source.google);
+			}
+		}
+		if (needSeperateBucket) {
+			List<RestaurantInternal> topResults = new ArrayList<RestaurantInternal>();
+			List<RestaurantInternal> otherResults = new ArrayList<RestaurantInternal>(); 
+			if (nativeResponse != null && nativeResponse.getResults() != null) {
+				for (RestaurantInternal internal : nativeResponse.getResults()) {
+					if (internal.getScore() >= SCORE_THRESHOLD) {
+						topResults.add(internal);
+					} else {
+						otherResults.add(internal);
+					}
 				}
 			}
-			if (needSeperateBucket) {
-				List<RestaurantInternal> topResults = new ArrayList<RestaurantInternal>();
-				List<RestaurantInternal> otherResults = new ArrayList<RestaurantInternal>(); 
-				if (nativeResponse != null && nativeResponse.getResults() != null) {
-					for (RestaurantInternal internal : nativeResponse.getResults()) {
-						if (internal.getScore() >= SCORE_THRESHOLD) {
-							topResults.add(internal);
-						} else {
-							otherResults.add(internal);
-						}
-					}
+			if (topResults.size() > 0) {
+				Bucket topBucket = createBucket(topResults);
+				if (topBucket != null) {
+					topBucket.setLabel(null);
+					buckets.add(0, topBucket);
 				}
-				if (topResults.size() > 0) {
-					Bucket topBucket = createBucket(topResults);
-					if (topBucket != null) {
-						topBucket.setLabel(null);
-						buckets.add(topBucket);
-					}
-				}
-				
-				if (otherResults.size() > 0) {
-					Bucket otherBucket = createBucket(otherResults);
-					if (otherBucket != null) {
-						otherBucket.setLabel("更多搜索结果");
-						buckets.add(otherBucket);
-					}
-					
-				}
-			} else {
-				if (nativeResponse != null && nativeResponse.getResults() != null) {
-					Bucket resultsBucket = createBucket(nativeResponse.getResults());
-					if (resultsBucket != null) {
-						resultsBucket.setLabel(null);
-						buckets.add(resultsBucket);
-					}
-				}
-				
+				topBucket.setSource(Source.self);
 			}
 			
+			if (otherResults.size() > 0) {
+				Bucket otherBucket = createBucket(otherResults);
+				if (otherBucket != null) {
+					otherBucket.setLabel("更多搜索结果");
+					buckets.add(otherBucket);
+					otherBucket.setSource(Source.self);
+				}
+				
+			}
+		} else {
+			if (nativeResponse != null && nativeResponse.getResults() != null) {
+				Bucket resultsBucket = createBucket(nativeResponse.getResults());
+				if (resultsBucket != null) {
+					resultsBucket.setLabel(null);
+					buckets.add(resultsBucket);
+				}
+			}
 			
 		}
 		
@@ -117,6 +120,18 @@ public class RestaurantSearchResponseBuilderTask implements Task<RestaurantSearc
 	@Override
 	public String getUniqueTaskId() {
 		return this.getClass().getName();
+	}
+
+	@Override
+	public void failedToComplete() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public long getTimeout() {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 
 }

@@ -34,4 +34,14 @@ public class RestaurantNativeSearchTask implements Task<RestaurantInternalSearch
 		return "native_search_task";
 	}
 
+	@Override
+	public void failedToComplete() {
+		throw new RuntimeException("Native search task timed out");
+	}
+
+	@Override
+	public long getTimeout() {
+		return 2000;
+	}
+
 }

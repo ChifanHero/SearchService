@@ -11,6 +11,7 @@ public class Bucket {
 	
 	private List<Result> results;
 	private String label;
+	private Source source;
 
 	public List<Result> getResults() {
 		return results;
@@ -32,6 +33,14 @@ public class Bucket {
 	 */
 	public void setLabel(String label) {
 		this.label = label;
+	}
+
+	public Source getSource() {
+		return source;
+	}
+
+	public void setSource(Source source) {
+		this.source = source;
 	}
 
 }

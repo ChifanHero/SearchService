@@ -41,4 +41,15 @@ public class RestaurantGoogleSearchTask implements Task<RestaurantInternalSearch
 		return "google_search_task";
 	}
 
+	@Override
+	public void failedToComplete() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public long getTimeout() {
+		return 1000;
+	}
+
 }

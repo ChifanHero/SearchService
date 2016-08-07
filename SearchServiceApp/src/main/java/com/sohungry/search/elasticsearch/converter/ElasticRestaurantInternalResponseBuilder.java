@@ -31,9 +31,11 @@ public class ElasticRestaurantInternalResponseBuilder implements ElasticInternal
 						continue;
 					}
 					JsonObject source = hit.get("_source").getAsJsonObject();
-					double score = hit.get("_score").getAsDouble();
 					RestaurantInternal restaurant = ElasticRestaurantConverter.convert(source);	
-					restaurant.setScore(score);
+					if (hit.get("_score") != null && !hit.get("_score").isJsonNull()) {
+						double score = hit.get("_score").getAsDouble();
+						restaurant.setScore(score);
+					}
 					results.add(restaurant);
 				}
 				response.setResults(results);

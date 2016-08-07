@@ -2,6 +2,7 @@ package com.sohungry.search.internal.representation.converter;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +16,7 @@ import com.sohungry.search.model.DistanceUnit;
 import com.sohungry.search.model.Location;
 import com.sohungry.search.model.Restaurant;
 import com.sohungry.search.model.RestaurantField;
+import com.sohungry.search.util.StringUtil;
 
 public class RestaurantInternalConverter {
 	
@@ -46,6 +48,7 @@ public class RestaurantInternalConverter {
 		}
 		if (returnAllFields || fields.contains(RestaurantField.dishes.name())) {
 			restaurant.setDishes(internal.getDishes());
+			restaurant.setDishes(getDishes(internal.getDishes()));
 		}
 		if (returnAllFields || fields.contains(RestaurantField.dislike_count.name())) {
 			restaurant.setDislikeCount(internal.getDislikeCount());
@@ -55,6 +58,9 @@ public class RestaurantInternalConverter {
 		}
 		if (returnAllFields || fields.contains(RestaurantField.favorite_count.name())) {
 			restaurant.setFavoriteCount(internal.getFavoriteCount());
+		}
+		if (returnAllFields || fields.contains(RestaurantField.rating.name())) {
+			restaurant.setRating(internal.getRating());
 		}
 		if (returnAllFields || fields.contains(RestaurantField.id.name())) {
 			restaurant.setId(internal.getId());
@@ -79,6 +85,30 @@ public class RestaurantInternalConverter {
 			restaurant.setPicture(internal.getPicture());
 		}
 		return restaurant;
+	}
+
+	private List<String> getDishes(List<String> dishes) {
+		if (dishes == null || dishes.isEmpty()) {
+			return Collections.emptyList();
+		}
+		List<String> results = new ArrayList<String>();
+		for (String dish : dishes) {
+			if ("en".equals(language)) {
+				if (!StringUtil.containsHanScript(dish)) {
+					if (results.size() < 20) {
+						results.add(dish);
+					}
+				}
+			} else if ("zh".equals(language)) {
+				if (StringUtil.containsHanScript(dish)) {
+					if (results.size() < 20) {
+						results.add(dish);
+					}
+				}
+			}
+		}
+		return results;
+		
 	}
 
 	private Distance getDistance(Location userLocation, Coordinates coordinates, DistanceUnit distanceUnit) {

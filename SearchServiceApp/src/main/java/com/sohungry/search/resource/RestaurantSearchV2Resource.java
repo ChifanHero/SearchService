@@ -52,18 +52,23 @@ public class RestaurantSearchV2Resource {
 		}
 		ApplicationContext appContext = new ApplicationContextBuilder(request, 2).build();
 		RestaurantRequestContext requestContext = new RestaurantRequestContextBuilder(searchRequest, appContext).build();
-		RestaurantNativeSearchTask nativeSearchTask = new RestaurantNativeSearchTask(requestContext);
-		RestaurantGoogleSearchTask googleSearchTask = new RestaurantGoogleSearchTask(requestContext);
-		GoogleRestaurantDedupeTask dedupeTask = new GoogleRestaurantDedupeTask();
-		TaskConfiguration dedupeTC = new TaskConfiguration(dedupeTask).addDependency(nativeSearchTask).addDependency(googleSearchTask);
-		RestaurantSearchResponseBuilderTask responseBuilderTask = new RestaurantSearchResponseBuilderTask(requestContext);
-		TaskConfiguration responseBuilderTC = new TaskConfiguration(responseBuilderTask).addDependency(dedupeTask);
 		ExecutorService executor = Executors.newFixedThreadPool(5);
 		Orchestrator orchestrator = new Orchestrator.Builder(executor).build(); 
 		OrchestratorFactory.setOrchestrator(orchestrator);
+		RestaurantNativeSearchTask nativeSearchTask = new RestaurantNativeSearchTask(requestContext);
 		orchestrator.acceptTask(nativeSearchTask);
-		orchestrator.acceptTask(googleSearchTask);
-		orchestrator.acceptTask(dedupeTask, dedupeTC);
+		RestaurantSearchResponseBuilderTask responseBuilderTask = new RestaurantSearchResponseBuilderTask(requestContext);
+		TaskConfiguration responseBuilderTC = new TaskConfiguration(responseBuilderTask);
+		if (requestContext.getKeyword() != null) {
+			RestaurantGoogleSearchTask googleSearchTask = new RestaurantGoogleSearchTask(requestContext);
+			GoogleRestaurantDedupeTask dedupeTask = new GoogleRestaurantDedupeTask();
+			TaskConfiguration dedupeTC = new TaskConfiguration(dedupeTask).addDependency(nativeSearchTask).addDependency(googleSearchTask);
+			orchestrator.acceptTask(googleSearchTask);
+			orchestrator.acceptTask(dedupeTask, dedupeTC);
+			responseBuilderTC.addDependency(dedupeTask);
+		} else {
+			responseBuilderTC.addDependency(nativeSearchTask);
+		}
 		orchestrator.acceptTask(responseBuilderTask, responseBuilderTC);
 		RestaurantSearchResponse searchResponse = null;
 		try {
