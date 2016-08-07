@@ -24,6 +24,7 @@ public final class RestaurantRequestContext extends RequestContext{
 	private Range range;
 	private boolean highlightInField;
 	private Source source;
+	private float minRating;
 	
 	public String getKeyword() {
 		return keyword;
@@ -108,6 +109,12 @@ public final class RestaurantRequestContext extends RequestContext{
 	 */
 	public void setSource(Source source) {
 		this.source = source;
+	}
+	public float getMinRating() {
+		return minRating;
+	}
+	public void setMinRating(float minRating) {
+		this.minRating = minRating;
 	}
 
 

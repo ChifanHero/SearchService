@@ -1,10 +1,9 @@
 package com.sohungry.search.request.validator;
 
-import com.sohungry.search.model.Range;
-import com.sohungry.search.model.RestaurantSearchRequest;
-import com.sohungry.search.model.SortBy;
 import com.sohungry.search.model.Error;
 import com.sohungry.search.model.ErrorSeverity;
+import com.sohungry.search.model.RestaurantSearchRequest;
+import com.sohungry.search.model.SortBy;
 
 public class RestaurantSearchRequestValidator {
 	
@@ -16,11 +15,11 @@ public class RestaurantSearchRequestValidator {
 	}
 	
 	public boolean validate() {
-		if (searchRequest.getKeyword() == null && !hasValidRange()) {
-			error.setSeverity(ErrorSeverity.error);
-			error.setMessage("keyword or valid range must be provided. A valid range must have center defined.");
-			return false;
-		}
+//		if (searchRequest.getKeyword() == null && !hasValidRange()) {
+//			error.setSeverity(ErrorSeverity.error);
+//			error.setMessage("keyword or valid range must be provided. A valid range must have center defined.");
+//			return false;
+//		}
 		if (searchRequest.getSortBy() != null && searchRequest.getSortBy() == SortBy.distance && searchRequest.getUserLocation() == null) {
 			error.setSeverity(ErrorSeverity.error);
 			error.setMessage("To sort by distance, user location must be provided");
@@ -33,18 +32,21 @@ public class RestaurantSearchRequestValidator {
 		return error;
 	}
 	
-	private boolean hasValidRange() {
-		if (searchRequest.getRange() != null) {
-			Range range = searchRequest.getRange();
-			if (range.getCenter() == null) {
-				return false;
-			} else {
-				return true;
-			}
-		} else {
-			return false;
-		}
-		
-	}
+//	private boolean hasValidRange() {
+//		if (searchRequest.getRange() != null) {
+//			Range range = searchRequest.getRange();
+//			if (range.getCenter() == null) {
+//				return false;
+//			} else {
+//				return true;
+//			}
+//		} else if (searchRequest.getFilters() != null){
+//			Filters filters = searchRequest.getFilters();
+//			Range range = filters.getRange();
+//		} else {
+//			return false;
+//		}
+//		
+//	}
 
 }

@@ -3,6 +3,7 @@ package com.sohungry.search.elasticsearch.query;
 import java.util.List;
 
 import org.elasticsearch.index.query.BaseQueryBuilder;
+import org.elasticsearch.index.query.BoolFilterBuilder;
 import org.elasticsearch.index.query.DisMaxQueryBuilder;
 import org.elasticsearch.index.query.FilterBuilder;
 import org.elasticsearch.index.query.FilterBuilders;
@@ -39,6 +40,7 @@ public class RestaurantElasticQueryBuilder implements ElasticQueryBuilder{
 	private Location userLocation;
 	private Range range;
 	private boolean highlightInField;
+	private float minRating;
 	
 	public RestaurantElasticQueryBuilder(RestaurantRequestContext requestContext) {
 		if (requestContext != null) {
@@ -52,6 +54,7 @@ public class RestaurantElasticQueryBuilder implements ElasticQueryBuilder{
 			this.fields = requestContext.getFields();
 			this.range = requestContext.getRange();
 			this.userLocation = requestContext.getUserLocation();
+			this.minRating = requestContext.getMinRating();
 		}
 	}
 
@@ -103,22 +106,29 @@ public class RestaurantElasticQueryBuilder implements ElasticQueryBuilder{
 			}
 		}
 		
-		if ((this.range != null && this.range.getDistance() != null && this.range.getCenter() != null) || this.userLocation != null ) {			
-			org.elasticsearch.common.unit.DistanceUnit unit = org.elasticsearch.common.unit.DistanceUnit.MILES;
-			Location center = null;
-			double distance = 50;
-			if (this.range != null && this.range.getDistance() != null && this.range.getCenter() != null) {
-				if (this.range.getDistance() != null && this.range.getDistance().getUnit() != null && this.range.getDistance().getUnit() == DistanceUnit.km) {
-					unit = org.elasticsearch.common.unit.DistanceUnit.KILOMETERS;
+		if (needFilteredQuery()) {	
+			BoolFilterBuilder boolFilter = FilterBuilders.boolFilter();
+			if (needRangeFilter()) {
+				org.elasticsearch.common.unit.DistanceUnit unit = org.elasticsearch.common.unit.DistanceUnit.MILES;
+				Location center = null;
+				double distance = 50;
+				if (this.range != null && this.range.getDistance() != null && this.range.getCenter() != null) {
+					if (this.range.getDistance() != null && this.range.getDistance().getUnit() != null && this.range.getDistance().getUnit() == DistanceUnit.km) {
+						unit = org.elasticsearch.common.unit.DistanceUnit.KILOMETERS;
+					}
+					center = this.range.getCenter();
+					distance = range.getDistance().getValue();
+				} else {
+					center = this.userLocation;
 				}
-				center = this.range.getCenter();
-				distance = range.getDistance().getValue();
-			} else {
-				center = this.userLocation;
+				FilterBuilder geoDistanceFilter = FilterBuilders.geoDistanceFilter("coordinates").distance(distance, unit).lat(center.getLat()).lon(center.getLon());
+				boolFilter.must(geoDistanceFilter);
 			}
-			
-			FilterBuilder geoDistanceFilter = FilterBuilders.geoDistanceFilter("coordinates").distance(distance, unit).lat(center.getLat()).lon(center.getLon());
-			FilteredQueryBuilder filterreQuery = QueryBuilders.filteredQuery(query, geoDistanceFilter);
+			if (needRatingFilter()) {
+				FilterBuilder ratingFilter = FilterBuilders.rangeFilter("rating").gt(this.minRating);
+				boolFilter.must(ratingFilter);
+			}
+			FilteredQueryBuilder filterreQuery = QueryBuilders.filteredQuery(query, boolFilter);
 			searchSourceBuilder.query(filterreQuery);
 		} else {
 			searchSourceBuilder.query(query);
@@ -141,6 +151,18 @@ public class RestaurantElasticQueryBuilder implements ElasticQueryBuilder{
 		                                .addType(Types.RESTAURANT)
 		                                .build();
 		return search;
+	}
+	
+	private boolean needFilteredQuery() {
+		return needRangeFilter() || needRatingFilter();
+	}
+	
+	private boolean needRangeFilter() {
+		return (this.range != null && this.range.getDistance() != null && this.range.getCenter() != null) || this.userLocation != null;
+	}
+	
+	private boolean needRatingFilter() {
+		return this.minRating > 0f;
 	}
 
 

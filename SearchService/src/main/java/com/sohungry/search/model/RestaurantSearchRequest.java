@@ -24,6 +24,8 @@ public class RestaurantSearchRequest {
 	private Location userLocation;
 	private Range range;
 	
+	private Filters filters;
+	
 	@JsonProperty("highlight_in_field")
 	private boolean highlightInField;
 	
@@ -82,6 +84,12 @@ public class RestaurantSearchRequest {
 	}
 	public void setRange(Range range) {
 		this.range = range;
+	}
+	public Filters getFilters() {
+		return filters;
+	}
+	public void setFilters(Filters filters) {
+		this.filters = filters;
 	}
 	public boolean isHighlightInField() {
 		return highlightInField;

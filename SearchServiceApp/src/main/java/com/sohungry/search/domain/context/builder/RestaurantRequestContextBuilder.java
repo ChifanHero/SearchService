@@ -36,7 +36,14 @@ public class RestaurantRequestContextBuilder {
 		setSortOrder(requestContext);
 		setUserLocation(requestContext);
 		setSource(requestContext);
+		setRatingFilter(requestContext);
 		return requestContext;
+	}
+
+	private void setRatingFilter(RestaurantRequestContext requestContext) {
+		if (request.getFilters() != null) {
+			requestContext.setMinRating(request.getFilters().getMinRating());
+		}
 	}
 
 	private void setSource(RestaurantRequestContext requestContext) {
@@ -84,7 +91,14 @@ public class RestaurantRequestContextBuilder {
 	}
 
 	private void setRange(RestaurantRequestContext requestContext) {
-		Range range = request.getRange();
+		
+		Range range = null;
+		if (request.getFilters() != null) {
+			range = request.getFilters().getRange();
+		}
+		if (range == null) {
+			range = request.getRange();
+		}
 		if (range != null && range.getCenter() != null) {
 			if (range.getDistance() == null) {
 				Distance distance = new Distance();
