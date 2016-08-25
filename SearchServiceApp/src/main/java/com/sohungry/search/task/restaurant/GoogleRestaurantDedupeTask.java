@@ -6,9 +6,13 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.sohungry.search.distance.HaversineDistanceCalculator;
+import com.sohungry.search.domain.context.RestaurantRequestContext;
 import com.sohungry.search.internal.representation.Coordinates;
 import com.sohungry.search.internal.representation.RestaurantInternal;
 import com.sohungry.search.internal.representation.RestaurantInternalSearchResponse;
+import com.sohungry.search.model.Distance;
+import com.sohungry.search.model.DistanceUnit;
+import com.sohungry.search.model.Location;
 import com.sohungry.search.model.Source;
 import com.sohungry.search.util.StringUtil;
 
@@ -16,6 +20,12 @@ import github.familysyan.concurrent.tasks.Task;
 
 public class GoogleRestaurantDedupeTask implements Task<List<RestaurantInternalSearchResponse>>{
 
+	private RestaurantRequestContext requestContext;
+	
+	public GoogleRestaurantDedupeTask(RestaurantRequestContext requestContext) {
+		this.requestContext = requestContext;
+	}
+	
 	@Override
 	public List<RestaurantInternalSearchResponse> execute(List<Object> dependencies) {
 		if (dependencies == null || dependencies.size() != 2) {
@@ -51,14 +61,25 @@ public class GoogleRestaurantDedupeTask implements Task<List<RestaurantInternalS
 			RestaurantInternalSearchResponse googleResponse) {
 		List<RestaurantInternal> nativeResults = nativeResponse.getResults();
 		List<RestaurantInternal> googleResults = googleResponse.getResults();
+		if (googleResults == null || googleResults.isEmpty()) {
+			return;
+		}
 		Iterator<RestaurantInternal> iterator = googleResults.iterator();
 		while (iterator.hasNext()) {
 			RestaurantInternal restaurant = iterator.next();
+			if (!isWithinRange(restaurant.getCoordinates())) {
+				iterator.remove();
+				continue;
+			}
+			if (nativeResults == null || nativeResults.isEmpty()) {
+				continue;
+			}
 			for (RestaurantInternal nativeResult : nativeResults) {
 				String name1 = nativeResult.getName() != null? nativeResult.getName() : nativeResult.getEnglishName();
 				String name2 = restaurant.getName() != null? restaurant.getName() : restaurant.getEnglishName();
 				if (isCloseEnough(nativeResult.getCoordinates(), restaurant.getCoordinates()) && isNameSimilarEnough(name1, name2)) {
 					iterator.remove();
+					break;
 				}
 			}
 		}
@@ -105,11 +126,30 @@ public class GoogleRestaurantDedupeTask implements Task<List<RestaurantInternalS
 //	}
 	
 	private boolean isCloseEnough(Coordinates coordinates1, Coordinates coordinates2) {
-		return HaversineDistanceCalculator.getDistanceInKm(coordinates1.getLat(), coordinates1.getLon(), coordinates2.getLat(), coordinates2.getLon()) <= 0.01;
+		Double distance = HaversineDistanceCalculator.getDistanceInKm(coordinates1.getLat(), coordinates1.getLon(), coordinates2.getLat(), coordinates2.getLon());
+		return  distance <= 0.03;
 	}
 	
 	private boolean isNameSimilarEnough(String name1, String name2) {
-		return StringUtil.getRelevanceScore(name1, name2) >= 0.5;
+		double score = StringUtil.getRelevanceScore(name1, name2);
+		return  score >= 0.5;
+	}
+	
+	private boolean isWithinRange(Coordinates coordinates) {
+		if (requestContext == null || requestContext.getRange() == null || requestContext.getRange().getCenter() == null) {
+			return true;
+		}
+		Location center = requestContext.getRange().getCenter();
+		Distance distance = requestContext.getRange().getDistance();
+		double distanceValue = distance.getValue();
+		if (distance.getUnit() == DistanceUnit.mi) {
+			distanceValue = distanceValue * 1.6;
+		}
+		Coordinates centCoordinates = new Coordinates();
+		centCoordinates.setLat(center.getLat());
+		centCoordinates.setLon(center.getLon());
+		Double realDistance = HaversineDistanceCalculator.getDistanceInKm(coordinates.getLat(), coordinates.getLon(), centCoordinates.getLat(), centCoordinates.getLon());
+		return realDistance <= distanceValue;
 	}
 
 	@Override

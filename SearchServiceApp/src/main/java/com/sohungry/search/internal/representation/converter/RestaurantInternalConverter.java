@@ -69,11 +69,20 @@ public class RestaurantInternalConverter {
 			restaurant.setLikeCount(internal.getLikeCount());
 		}
 		if (returnAllFields || fields.contains(RestaurantField.name.name())) {
-			if ("en".equals(language)) {
-				restaurant.setName(internal.getEnglishName());
-			} else {
-				restaurant.setName(internal.getName());
+			String name = internal.getName();
+			String englishName = internal.getEnglishName();
+			if (name == null && englishName != null) {
+				restaurant.setName(englishName);
+			} else if (name != null && englishName == null) {
+				restaurant.setName(name);
+			} else if (name != null && englishName != null) {
+				if ("en".equals(language)) {
+					restaurant.setName(internal.getEnglishName());
+				} else {
+					restaurant.setName(internal.getName());
+				}
 			}
+			
 		}
 		if (returnAllFields || fields.contains(RestaurantField.neutral_count.name())) {
 			restaurant.setNeutralCount(internal.getNeutralCount());

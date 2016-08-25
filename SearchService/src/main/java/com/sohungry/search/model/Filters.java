@@ -1,6 +1,7 @@
 package com.sohungry.search.model;
 
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -8,6 +9,8 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 public class Filters {
 	
 	private Range range;
+	
+	@JsonProperty("min_rating")
 	private float minRating;
 	
 	public Range getRange() {
