@@ -1,6 +1,7 @@
 package com.sohungry.search.task.restaurant;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -9,8 +10,10 @@ import com.sohungry.search.internal.representation.RestaurantInternal;
 import com.sohungry.search.internal.representation.RestaurantInternalSearchResponse;
 import com.sohungry.search.internal.representation.converter.RestaurantInternalConverter;
 import com.sohungry.search.model.Bucket;
+import com.sohungry.search.model.Restaurant;
 import com.sohungry.search.model.RestaurantSearchResponse;
 import com.sohungry.search.model.Result;
+import com.sohungry.search.model.SortBy;
 import com.sohungry.search.model.Source;
 
 import github.familysyan.concurrent.tasks.Task;
@@ -18,7 +21,7 @@ import github.familysyan.concurrent.tasks.Task;
 public class RestaurantSearchResponseBuilderTask implements Task<RestaurantSearchResponse>{
 	
 	private RestaurantRequestContext requestContext;
-	private final static double SCORE_THRESHOLD = 1.0;
+	private final static double SCORE_THRESHOLD = 1.5;
 	
 	public RestaurantSearchResponseBuilderTask(RestaurantRequestContext requestContext) {
 		this.requestContext = requestContext;
@@ -65,11 +68,16 @@ public class RestaurantSearchResponseBuilderTask implements Task<RestaurantSearc
 			List<RestaurantInternal> otherResults = new ArrayList<RestaurantInternal>(); 
 			if (nativeResponse != null && nativeResponse.getResults() != null) {
 				for (RestaurantInternal internal : nativeResponse.getResults()) {
-					if (internal.getScore() >= SCORE_THRESHOLD) {
+					if (requestContext.getSortBy() != SortBy.relevance) {
 						topResults.add(internal);
 					} else {
-						otherResults.add(internal);
+						if (internal.getScore() >= SCORE_THRESHOLD) {
+							topResults.add(internal);
+						} else {
+							otherResults.add(internal);
+						}
 					}
+					
 				}
 			}
 			if (topResults.size() > 0) {
@@ -100,8 +108,31 @@ public class RestaurantSearchResponseBuilderTask implements Task<RestaurantSearc
 			}
 			
 		}
-		
+		if (requestContext.getSortBy() == SortBy.relevance) {
+			for (Bucket bucket : response.getBuckets()) {
+				boostNearRestaurantsWithinBucket(bucket);
+			}
+		}
 		return response;
+	}
+
+	
+
+	private void boostNearRestaurantsWithinBucket(Bucket bucket) {
+		if (bucket == null || bucket.getResults() == null || bucket.getResults().size() == 0) {
+			return;
+		}
+		List<Result> results = bucket.getResults();
+		List<Result> near = new ArrayList<Result>();
+		Iterator<Result> iterator = results.iterator();
+		while (iterator.hasNext()) {
+			Restaurant rest = (Restaurant) iterator.next();
+			if (rest.getDistance() != null && rest.getDistance().getValue() <= 5.0) {
+				near.add(rest);
+				iterator.remove();
+			}
+		}
+		results.addAll(0, near);
 	}
 
 	private Bucket createBucket(List<RestaurantInternal> results) {

@@ -59,7 +59,7 @@ public class RestaurantSearchV2Resource {
 		orchestrator.acceptTask(nativeSearchTask);
 		RestaurantSearchResponseBuilderTask responseBuilderTask = new RestaurantSearchResponseBuilderTask(requestContext);
 		TaskConfiguration responseBuilderTC = new TaskConfiguration(responseBuilderTask);
-		if (requestContext.getKeyword() != null) {
+		if (requestContext.getKeyword() != null && requestContext.getOffset() == 0) {
 			RestaurantGoogleSearchTask googleSearchTask = new RestaurantGoogleSearchTask(requestContext);
 			GoogleRestaurantDedupeTask dedupeTask = new GoogleRestaurantDedupeTask(requestContext);
 			TaskConfiguration dedupeTC = new TaskConfiguration(dedupeTask).addDependency(nativeSearchTask).addDependency(googleSearchTask);

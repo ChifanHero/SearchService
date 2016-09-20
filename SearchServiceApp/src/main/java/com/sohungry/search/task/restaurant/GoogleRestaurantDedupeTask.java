@@ -76,8 +76,9 @@ public class GoogleRestaurantDedupeTask implements Task<List<RestaurantInternalS
 			}
 			for (RestaurantInternal nativeResult : nativeResults) {
 				String name1 = nativeResult.getName() != null? nativeResult.getName() : nativeResult.getEnglishName();
+				String englishName1 = nativeResult.getEnglishName();
 				String name2 = restaurant.getName() != null? restaurant.getName() : restaurant.getEnglishName();
-				if (isCloseEnough(nativeResult.getCoordinates(), restaurant.getCoordinates()) && isNameSimilarEnough(name1, name2)) {
+				if (isCloseEnough(nativeResult.getCoordinates(), restaurant.getCoordinates()) && (isNameSimilarEnough(name1, name2) || isNameSimilarEnough(englishName1, name2))) {
 					iterator.remove();
 					break;
 				}
@@ -127,7 +128,7 @@ public class GoogleRestaurantDedupeTask implements Task<List<RestaurantInternalS
 	
 	private boolean isCloseEnough(Coordinates coordinates1, Coordinates coordinates2) {
 		Double distance = HaversineDistanceCalculator.getDistanceInKm(coordinates1.getLat(), coordinates1.getLon(), coordinates2.getLat(), coordinates2.getLon());
-		return  distance <= 0.03;
+		return  distance <= 0.10;
 	}
 	
 	private boolean isNameSimilarEnough(String name1, String name2) {
